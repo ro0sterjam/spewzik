@@ -13,7 +13,6 @@ GET
 **/playlists/{playlist_id}/tracks/current**  
 - Retrieves the metadata of the track currently playing in the given playlist.  
     - Has the form:  
-    
         ```{
             id: *tract id*,
             name: *track name*,
@@ -26,7 +25,6 @@ GET
 **/playlists/{playlist_id}/tracks**  
 - Retrieves the metadata of the tracks in the given playlist.  
     - Has the form:  
-    
         ```{  
             id : *playlist id*,  
             name: *playlist name*,  
@@ -51,15 +49,15 @@ POST
 **/playlists/{playlist_id}/tracks?id={track_id}**  
 - Adds track at the given id to the given playlist, or upvotes it if already present.  
 - Retrieves the metadata of the newly added track.  
-    - Has the form:  
-    
-        {  
-            id: *tract id*,  
-            name: *track name*,  
-            artist: *artist name*,  
-            length: *length in seconds*,  
-            order: *place in the playlist*  
-        }  
+    - Has the form:
+        ```{
+            id: *tract id*,
+            name: *track name*,
+            artist: *artist name*,
+            length: *length in seconds*,
+            order: *place in the playlist*
+        }
+        ```
     
 **/playlists/{playlist_id}/tracks?url={track_url}**  
 - Adds track at the given url to the given playlist, or upvotes it if already present.  
