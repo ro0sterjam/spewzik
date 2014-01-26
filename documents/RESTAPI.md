@@ -14,19 +14,20 @@ GET
 - Retrieves the metadata of the track currently playing in the given playlist.  
     - Has the form:  
     
-        {  
-            id: *tract id*,  
-            name: *track name*,  
-            artist: *artist name*,  
-            length: *length in seconds*,  
-            pos: *current position in track*  
-        }  
+        ```{
+            id: *tract id*,
+            name: *track name*,
+            artist: *artist name*,
+            length: *length in seconds*,
+            pos: *current position in track*
+        }
+        ```
         
 **/playlists/{playlist_id}/tracks**  
 - Retrieves the metadata of the tracks in the given playlist.  
     - Has the form:  
     
-        {  
+        ```{  
             id : *playlist id*,  
             name: *playlist name*,  
             length: *length of playlist*,  
@@ -42,6 +43,7 @@ GET
                     ...  
             ]  
         }  
+        ```
 
 POST
 ----
