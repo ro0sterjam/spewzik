@@ -12,16 +12,17 @@ GET
 
 **/playlists/{playlist_id}/tracks/current**  
 - Retrieves the metadata of the track currently playing in the given playlist.  
-    - Has the form:  
-        ```{
-            id: *tract id*,
-            name: *track name*,
-            artist: *artist name*,
-            length: *length in seconds*,
-            pos: *current position in track*
-        }
-        ```
-        
+    - Has the form:
+
+    ```{
+        id: *tract id*,
+        name: *track name*,
+        artist: *artist name*,
+        length: *length in seconds*,
+        pos: *current position in track*
+    }
+    ```
+
 **/playlists/{playlist_id}/tracks**  
 - Retrieves the metadata of the tracks in the given playlist.  
     - Has the form:  
