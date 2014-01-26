@@ -23,7 +23,7 @@ High-level Reqs:
 - Add song to community
 - Vote songs up and down
 
-It’s probably a good idea to set up the backend as a separate REST service
+It's probably a good idea to set up the backend as a separate REST service
 
 Tech Stack:
 ------------
