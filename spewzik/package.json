@@ -10,6 +10,8 @@
     "jade": "*",
     "mongodb": "*",
     "monk": "*",
-    "youtube-dl": "*"
+    "youtube-dl": "*",
+    "xml2js": "*",
+    "request": "*"
   }
 }
