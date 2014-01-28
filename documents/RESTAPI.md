@@ -5,10 +5,31 @@ GET
 ---
 
 **/**  
-- Reroutes to /playlists/0  
+- Reroutes to /playlists/0/play  
+
+**/playlists/{playlist_id}/play**  
+- Loads an html page with an audio player to stream the given playlist.  
 
 **/playlists/{playlist_id}**  
-- Loads an html page with an audio player to stream the given playlist.  
+- Retrieves the metadata of the given playlist.  
+    - Has the form:  
+    
+        {  
+          id : *playlist id*,  
+            name: *playlist name*,  
+            length: *length of playlist*,  
+            pos: *current position in playlist*  
+            tracks: [  
+                {  
+                    id: *track id*,  
+                    name: *track name*,  
+                    artist: *artist name*,  
+                    length: *length in seconds*,  
+                    order: *place in the playlist*  
+                },  
+                    ...  
+            ]  
+        }  
 
 **/playlists/{playlist_id}/tracks/current**  
 - Retrieves the metadata of the track currently playing in the given playlist.  
@@ -26,22 +47,16 @@ GET
 - Retrieves the metadata of the tracks in the given playlist.  
     - Has the form:  
     
-        {  
-            id : *playlist id*,  
-            name: *playlist name*,  
-            length: *length of playlist*,  
-            pos: *current position in playlist*  
-            tracks: [  
-                {  
-                    id: *track id*,  
-                    name: *track name*,  
-                    artist: *artist name*,  
-                    length: *length in seconds*,  
-                    order: *place in the playlist*  
-                },  
-                    ...  
-            ]  
-        }  
+        [  
+            {  
+                id: *track id*,  
+                name: *track name*,  
+                artist: *artist name*,  
+                length: *length in seconds*,  
+                order: *place in the playlist*  
+            },  
+                ...  
+        ]   
 
 POST
 ----
