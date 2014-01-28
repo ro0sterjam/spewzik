@@ -6,9 +6,12 @@ var youtubedl = require('youtube-dl');
 var request = require('request');
 
 var db = monk('localhost:27017/spewzik');
+var dlPath = './tracks';
 
+/**
+ * Downloads the track with the given host and external ID to the folder defined at dlPath.
+ */
 downloadTrack = function(host, extId) {
-	var dlPath = './tracks';
 	if (host === 'youtube') {
 		var dl = youtubedl.download(
 			'http://www.youtube.com/watch?v=' + extId, 
@@ -43,6 +46,12 @@ downloadTrack = function(host, extId) {
 	}
 }
 
+/**
+ * Parses the URL to retrieve the hostname and external ID.
+ * Currently only supports YouTube, and sets the host as 'youtube' in that case.
+ * 
+ * Callback of the form: function(err, host, extId)
+ */
 parseUrl = function(urlStr, callback) {
 	var urlObj = url.parse(urlStr);
 	if (urlObj.host === null) {
@@ -59,6 +68,12 @@ parseUrl = function(urlStr, callback) {
 	}
 }
 
+/**
+ * Adds the given track to the playlist document with the given playlistId in the DB.
+ * Returns the updated playlist object.
+ * 
+ * Callback of the form: function(err, playlist)
+ */
 addTrackToPlaylist = function(playlistId, track, callback) {
 	db.get('playlists').findOne({ _id: playlistId, 'tracks._id': track._id }, {}, function(err, data) {
 		if (data === null) {
@@ -71,6 +86,12 @@ addTrackToPlaylist = function(playlistId, track, callback) {
 	});
 }
 
+/**
+ * Adds the track at the given URL to the DB.
+ * Downloads the track using downloadTrack()
+ * 
+ * Callback of the form: function(err, track)
+ */
 addTrackByUrl = function(url, callback) {
 	parseUrl(url, function(err, host, extId) {
 		if (err) {
@@ -81,6 +102,12 @@ addTrackByUrl = function(url, callback) {
 	});
 }
 
+/**
+ * Adds the track at the given host with the given external ID to the DB.
+ * Downloads the track using downloadTrack()
+ * 
+ * Callback of the form: function(err, track)
+ */
 addTrack = function(host, extId, callback) {
 	if (host === 'youtube') {
 		request('https://gdata.youtube.com/feeds/api/videos/' + extId + '?v=2', function(err, res, body) {
@@ -112,10 +139,20 @@ addTrack = function(host, extId, callback) {
 	}
 }
 
+/**
+ * Gets the track with the given ID from the DB.
+ * 
+ * Callback of the form: function(err, track)
+ */
 getTrack = function(id, callback) {
 	db.get('tracks').findOne({ _id: id }, {}, callback);
 }
 
+/**
+ * Gets the track with the given url from the DB.
+ * 
+ * Callback of the form: function(err, track)
+ */
 findTrackByUrl = function(url, callback) {
 	parseUrl(url, function(err, host, extId) {
 		if (err) {
@@ -126,12 +163,36 @@ findTrackByUrl = function(url, callback) {
 	});
 }
 
+/**
+ * Gets the track with the given host and extId from the DB.
+ * 
+ * Callback of the form: function(err, track)
+ */
 findTrack = function(host, extId, callback) {
 	db.get('tracks').findOne({ 'host': host, 'extId': extId }, {}, callback);
 }
 
+/**
+ * Gets the playlist with the given ID from the DB.
+ * Returns the contained tracks in order from highest to lowest rating and added date.
+ * 
+ * Callback of the form: function(err, playlist)
+ */
 getPlaylist = function(id, callback) {
-	db.get('playlists').findOne({ _id: id }, { $orderby: { 'tracks.$.rating' : -1 } }, callback);
+	db.get('playlists').findOne({ _id: id }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
+		if (err || playlist === null) {
+			callback(err, null);
+		} else {
+			playlist.tracks = playlist.tracks.sort(function(a, b) {
+				var diff = b.rating - a.rating;
+				if (diff === 0) {
+					diff = a.added - b.added;
+				}
+				return diff;
+			});
+			callback(null, playlist);
+		}
+	});
 }
 
 exports.addTrackToPlaylist = addTrackToPlaylist;

@@ -1,9 +1,15 @@
 var main = require('../main');
 
+/**
+ * Redirects the main page to the play page of the main playlist.
+ */
 exports.index = function(req, res) {
 	res.redirect('/playlists/0/play', 303);
 };
 
+/**
+ * Adds a track to the given playlist either by track ID, url, or host + external ID.
+ */
 exports.addTrackToPlaylist = function(req, res) {
 	var playlistId = req.params.playlist_id;
 		
@@ -85,6 +91,9 @@ exports.addTrackToPlaylist = function(req, res) {
 	}
 };
 
+/**
+ * Serves the playlist with the given ID to the response.
+ */
 exports.getPlaylist = function(req, res) {
 	var playlistId = req.params.playlist_id;
 	
@@ -94,13 +103,6 @@ exports.getPlaylist = function(req, res) {
 		} else if (playlist === null) {
 			res.send(404, { error: 'playlist not found' });
 		} else {
-			playlist.tracks = playlist.tracks.sort(function(a, b) {
-				var diff = b.rating - a.rating;
-				if (diff === 0) {
-					diff = a.added - b.added;
-				}
-				return diff;
-			});
 			res.send(200, playlist);
 		}
 	});
