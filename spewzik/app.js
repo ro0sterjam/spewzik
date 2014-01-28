@@ -28,7 +28,7 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/playlists', routes.getPlaylist);
+app.get('/playlists/:playlist_id', routes.getPlaylist);
 app.post('/playlists/:playlist_id/tracks', routes.addTrackToPlaylist);
 
 http.createServer(app).listen(app.get('port'), function(){

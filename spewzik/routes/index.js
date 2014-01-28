@@ -69,7 +69,7 @@ getPlaylist = function(id, callback) {
 }
 
 exports.index = function(req, res) {
-	res.redirect('/playlists?id=0', 303);
+	res.redirect('/playlists/0/play', 303);
 };
 
 exports.addTrackToPlaylist = function(req, res) {
@@ -87,7 +87,7 @@ exports.addTrackToPlaylist = function(req, res) {
 					if (err) {
 						res.send(500, { error: err });
 					} else {
-						res.redirect('/playlists/?id=' + playlistId, 303);
+						res.redirect('/playlists/' + playlistId, 303);
 					}
 				});
 			}
@@ -105,7 +105,7 @@ exports.addTrackToPlaylist = function(req, res) {
 							if (err) {
 								res.send(500, { error: err });
 							} else {
-								res.redirect('/playlists/?id=' + playlistId, 303);
+								res.redirect('/playlists/' + playlistId, 303);
 							}
 						});
 					}
@@ -115,7 +115,7 @@ exports.addTrackToPlaylist = function(req, res) {
 					if (err) {
 						res.send(500, { error: err });
 					} else {
-						res.redirect('/playlists/?id=' + playlistId, 303);
+						res.redirect('/playlists/' + playlistId, 303);
 					}
 				});
 			}
@@ -133,7 +133,7 @@ exports.addTrackToPlaylist = function(req, res) {
 							if (err) {
 								res.send(500, { error: err });
 							} else {
-								res.redirect('/playlists/?id=' + playlistId, 303);
+								res.redirect('/playlists/' + playlistId, 303);
 							}
 						});
 					}
@@ -143,7 +143,7 @@ exports.addTrackToPlaylist = function(req, res) {
 					if (err) {
 						res.send(500, { error: err });
 					} else {
-						res.redirect('/playlists/?id=' + playlistId, 303);
+						res.redirect('/playlists/' + playlistId, 303);
 					}
 				});
 			}
@@ -154,25 +154,22 @@ exports.addTrackToPlaylist = function(req, res) {
 };
 
 exports.getPlaylist = function(req, res) {
-	var query = req.query;
-	if ('id' in query) {
-		getPlaylist(query.id, function(err, playlist) {
-			if (err) {
-				res.send(500, { error: err });
-			} else if (playlist === null) {
-				res.send(404, { error: 'playlist not found' });
-			} else {
-				playlist.tracks = playlist.tracks.sort(function(a, b) {
-					var diff = b.rating - a.rating;
-					if (diff === 0) {
-						diff = a.added - b.added;
-					}
-					return diff;
-				});
-				res.send(200, playlist);
-			}
-		});	
-	} else {
-		res.send(400, { error: 'malformed query' });
-	}
+	var playlistId = req.params.playlist_id;
+	
+	getPlaylist(playlistId, function(err, playlist) {
+		if (err) {
+			res.send(500, { error: err });
+		} else if (playlist === null) {
+			res.send(404, { error: 'playlist not found' });
+		} else {
+			playlist.tracks = playlist.tracks.sort(function(a, b) {
+				var diff = b.rating - a.rating;
+				if (diff === 0) {
+					diff = a.added - b.added;
+				}
+				return diff;
+			});
+			res.send(200, playlist);
+		}
+	});
 };
