@@ -72,7 +72,7 @@ parseUrl = function(urlStr, callback) {
  * Adds the given track to the playlist document with the given playlistId in the DB.
  * Returns the updated playlist object.
  * 
- * Callback of the form: function(err, playlist)
+ * Callback of the form: function(err, count)
  */
 addTrackToPlaylist = function(playlistId, track, callback) {
 	db.get('playlists').findOne({ _id: playlistId, 'tracks._id': track._id }, {}, function(err, data) {
@@ -195,6 +195,29 @@ getPlaylist = function(id, callback) {
 	});
 }
 
+/**
+ * Adds the given value to the rating of the track in the tracks collection and as well as
+ * to the rating of the track in the playlist in the playlists collection with the given 
+ * track ID and playlist ID.
+ *
+ * The value of count in the callback will be 0 if track failed at updated in playlist, 1 if 
+ * track succeeded updating in playlist but not in tracks collection, and 2 if successful in both.
+ *
+ * Callback of the form: function(err, count)
+ */
+addTrackRating = function(playlistId, trackId, i, callback) {
+	var tracks = db.get('tracks');
+	db.get('playlists').update({ _id: playlistId, 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
+		if (err || count === 0) {
+			callback(err, 0);
+		} else {
+			db.get('tracks').update({ _id: tracks.id(trackId) }, { $inc: { rating: i } }, function(err, count) {
+				callback(err, count + 1);
+			});
+		}
+	});
+}
+
 exports.addTrackToPlaylist = addTrackToPlaylist;
 exports.addTrackByUrl = addTrackByUrl;
 exports.addTrack = addTrack;
@@ -202,3 +225,4 @@ exports.getTrack = getTrack;
 exports.findTrackByUrl = findTrackByUrl;
 exports.findTrack = findTrack;
 exports.getPlaylist = getPlaylist;
+exports.addTrackRating = addTrackRating;

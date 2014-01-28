@@ -21,9 +21,11 @@ exports.addTrackToPlaylist = function(req, res) {
 			} else if (track === null) {
 				res.send(404, { error: 'track not found' });
 			} else {
-				main.addTrackToPlaylist(playlistId, track, function(err) {
+				main.addTrackToPlaylist(playlistId, track, function(err, count) {
 					if (err) {
 						res.send(500, { error: err });
+					} else if (count === 0){
+						res.send(500, { error: 'couldn\'t add track to playlist' });
 					} else {
 						res.redirect('/playlists/' + playlistId, 303);
 					}
@@ -39,9 +41,11 @@ exports.addTrackToPlaylist = function(req, res) {
 					if (err) {
 						res.send(500, { error: err });
 					} else {
-						main.addTrackToPlaylist(playlistId, track, function(err) {
+						main.addTrackToPlaylist(playlistId, track, function(err, count) {
 							if (err) {
 								res.send(500, { error: err });
+							} else if (count === 0){
+								res.send(500, { error: 'couldn\'t add track to playlist' });
 							} else {
 								res.redirect('/playlists/' + playlistId, 303);
 							}
@@ -49,9 +53,11 @@ exports.addTrackToPlaylist = function(req, res) {
 					}
 				});
 			} else {
-				main.addTrackToPlaylist(playlistId, track, function(err) {
+				main.addTrackToPlaylist(playlistId, track, function(err, count) {
 					if (err) {
 						res.send(500, { error: err });
+					} else if (count === 0){
+						res.send(500, { error: 'couldn\'t add track to playlist' });
 					} else {
 						res.redirect('/playlists/' + playlistId, 303);
 					}
@@ -67,9 +73,11 @@ exports.addTrackToPlaylist = function(req, res) {
 					if (err) {
 						res.send(500, { error: err });
 					} else {
-						main.addTrackToPlaylist(playlistId, track, function(err) {
+						main.addTrackToPlaylist(playlistId, track, function(err, count) {
 							if (err) {
 								res.send(500, { error: err });
+							} else if (count === 0){
+								res.send(500, { error: 'couldn\'t add track to playlist' });
 							} else {
 								res.redirect('/playlists/' + playlistId, 303);
 							}
@@ -77,9 +85,11 @@ exports.addTrackToPlaylist = function(req, res) {
 					}
 				});
 			} else {
-				main.addTrackToPlaylist(playlistId, track, function(err) {
+				main.addTrackToPlaylist(playlistId, track, function(err, count) {
 					if (err) {
 						res.send(500, { error: err });
+					} else if (count === 0){
+						res.send(500, { error: 'couldn\'t add track to playlist' });
 					} else {
 						res.redirect('/playlists/' + playlistId, 303);
 					}
@@ -106,4 +116,27 @@ exports.getPlaylist = function(req, res) {
 			res.send(200, playlist);
 		}
 	});
+};
+
+/**
+ * Adds the given value to the the rating of the given track of the given playlist.
+ */
+exports.addTrackRating = function(i) {
+	return function(req, res) {
+		// ID is String type, while param is int type
+		var playlistId = req.params.playlist_id;
+		var trackId = req.params.track_id;
+	
+		main.addTrackRating(playlistId, trackId, i, function(err, count) {
+			if (err) {
+				res.send(500, { error: err });
+			} else if (count === 0) {
+				res.send(404, { error: 'track not found in playlist' });
+			} else if (count === 1) {
+				res.send(207, { error: 'track found in playlist but not in tracks collection' });
+			} else {	
+				res.redirect('/playlists/' + playlistId, 303);
+			}
+		});
+	};
 };

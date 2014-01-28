@@ -30,6 +30,8 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 app.get('/playlists/:playlist_id', routes.getPlaylist);
 app.post('/playlists/:playlist_id/tracks', routes.addTrackToPlaylist);
+app.put('/playlists/:playlist_id/tracks/:track_id/up', routes.addTrackRating(1));
+app.put('/playlists/:playlist_id/tracks/:track_id/down', routes.addTrackRating(-1));
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
