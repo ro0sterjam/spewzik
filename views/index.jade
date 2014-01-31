@@ -1,0 +1,29 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src='/javascripts/jquery-1.10.1.min.js')
+    script(type='text/javascript').
+    
+      var createPlaylist = function(playlistName) {
+        var url = '/playlists/?name=' + playlistName;
+        $.ajax({ url: url, type: 'POST', success: function(result) {
+          $('div#playlists').append('<a href=\'/playlists/' + result._id + '/play\'>' + result.name + '</a>');
+        }});
+      }
+    
+      $(document).ready(function(){
+        $('button#addPlaylist').on('click', function() {
+          createPlaylist($("input#playlistName").val());
+        });
+      });
+  body
+    h1= title
+    p Welcome to YOUR DEATH
+    div#playlists
+      each playlist, i in playlists
+        a(href='/playlists/#{playlist._id}/play') #{playlist.name}
+        br
+    input#playlistName(type="text", placeholder="Playlist Name")
+    button#addPlaylist New Playlist
