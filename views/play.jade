@@ -12,13 +12,22 @@ html
           url: url, 
           type: 'POST', 
           success: function(track) {
-            $('var#errorMsg').text('');
-            $('div#tracks').append('<p>' + track.name + '</p><p>Rating: <var class=\'rating\' data-trackid=\'' + track._id + '\'>' + track.rating + '</var></p><button class=\'upvote\' data-trackid=\'' + track._id + '\'>Up</button><button class=\'downvote\' data-trackid=\'' + track._id + '\'>Down</button>');
+            if ($("var[data-trackid='" + track._id + "']").length > 0) {
+              $($("var[data-trackid='" + track._id + "']")).text(track.rating);
+              $('var#messageArea').text('Track already exists, upvoted');
+            } else {
+              $('div#tracks').append('<p>' + track.name + '</p><p>Rating: <var class=\'rating\' data-trackid=\'' + track._id + '\'>' + track.rating + '</var></p><button class=\'upvote\' data-trackid=\'' + track._id + '\'>Up</button><button class=\'downvote\' data-trackid=\'' + track._id + '\'>Down</button>');
+              $('var#messageArea').text('');
+            }
           },
           error: function(error) {
-            console.log('ajax error');
-            console.log(error);
-            $('var#errorMsg').text(error.responseJSON.error);
+            if (typeof(error.responseJSON) !== 'undefined') {
+              $('var#messageArea').text(error.responseJSON.error);
+            } else if (error.statusText) {
+              $('var#messageArea').text(error.statusText);
+            } else {
+              $('var#messageArea').text('Unknown error occurred');
+            }
           }
         });
       }
@@ -56,4 +65,4 @@ html
     button#addTrack New Track
     br
     br
-    var#errorMsg
+    var#messageArea

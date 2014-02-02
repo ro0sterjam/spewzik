@@ -11,7 +11,10 @@ var dlPath = './tracks';
  * Downloads the track with the given host and external ID to the folder defined at dlPath.
  */
 downloadTrack = function(host, extId) {
-	if (host === 'youtube') {
+	// Don't download the video. this was just a proof of concept.
+	if (true) {
+		return;
+	} else if (host === 'youtube') {
 		var dl = youtubedl.download(
 			'http://www.youtube.com/watch?v=' + extId, 
 			dlPath,
