@@ -5,7 +5,12 @@ var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
 
-var db = monk('localhost:27017/spewzik');
+if ('production' == app.get('env')) {
+	var db = monk(process.env.MONGOHQ_URL);
+} else {
+	var db = monk('localhost:27017/spewzik');
+}
+
 var dlPath = './tracks';
 
 /**
@@ -325,4 +330,8 @@ exports.getPlaylist = getPlaylist;
 exports.getPlaylistTracks = getPlaylistTracks;
 exports.getPlaylistTrack = getPlaylistTrack;
 exports.getCurrentTrack = getCurrentTrack;
+<<<<<<< HEAD
 exports.addToTrackRating = addToTrackRating;
+=======
+exports.addToTrackRating = addToTrackRating;
+>>>>>>> 2194643e4680636b929e7a6a11b906473dd36c9c
