@@ -7,6 +7,7 @@ var express = require('express');
 var routes = require('./routes');
 var http = require('http');
 var path = require('path');
+var monk = require('monk');
 
 var app = express();
 
@@ -27,6 +28,12 @@ if ('development' == app.get('env')) {
   app.use(express.errorHandler());
 }
 
+// Check if mongodb url is defined, if not use localhost
+if (typeof(process.env.MONGOHQ_URL) == 'undefined') {
+	process.env.MONGOHQ_URL = 'localhost:27017/spewzik';
+}
+var db = monk(process.env.MONGOHQ_URL);
+
 app.get('/', routes.index);
 app.get('/playlists/:playlist_id', routes.getPlaylist);
 app.get('/playlists/:playlist_id/tracks', routes.getPlaylistTracks);
@@ -41,3 +48,5 @@ app.put('/playlists/:playlist_id/tracks/:track_id/down', routes.addToTrackRating
 http.createServer(app).listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
+
+exports.db = db;

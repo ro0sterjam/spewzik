@@ -66,6 +66,8 @@ exports.addTrackToPlaylist = function(req, res) {
 				main.addTrackByUrl(query.url, function(err, track) {
 					if (err) {
 						res.send(500, { error: err.message });
+					} else if (track === null){
+						res.send(500, { error: 'could not add track'});
 					} else {
 						main.addTrackToPlaylist(playlistId, track, function(err, count) {
 							if (err) {
@@ -98,6 +100,8 @@ exports.addTrackToPlaylist = function(req, res) {
 				main.addTrack(query.host, query.eid, function(err, track) {
 					if (err) {
 						res.send(500, { error: err.message });
+					} else if (track === null){
+						res.send(500, { error: 'could not add track'});
 					} else {
 						main.addTrackToPlaylist(playlistId, track, function(err, count) {
 							if (err) {

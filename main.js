@@ -1,10 +1,9 @@
-var monk = require('monk');
 var url = require('url');
 var querystring = require('querystring');
 var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
-
+var app = require('./app')
 var db = monk('localhost:27017/spewzik');
 //var db = monk(MONGOHQ_URL);
 var dlPath = './tracks';
@@ -13,7 +12,10 @@ var dlPath = './tracks';
  * Downloads the track with the given host and external ID to the folder defined at dlPath.
  */
 downloadTrack = function(host, extId) {
-	if (host === 'youtube') {
+	// Don't download the video. this was just a proof of concept.
+	if (true) {
+		return;
+	} else if (host === 'youtube') {
 		var dl = youtubedl.download(
 			'http://www.youtube.com/watch?v=' + extId,
 			dlPath,
@@ -79,7 +81,7 @@ createPlaylist = function(playlistName, callback) {
 		name: playlistName,
 		tracks: []
 	};
-	db.get('playlists').insert(playlist, callback);
+	app.db.get('playlists').insert(playlist, callback);
 }
 
 /**
@@ -89,14 +91,14 @@ createPlaylist = function(playlistName, callback) {
  * Callback of the form: function(err, count)
  */
 addTrackToPlaylist = function(playlistId, track, callback) {
-	var playlists = db.get('playlists');
-	db.get('playlists').findOne({ _id: playlists.id(playlistId), 'tracks._id': track._id }, {}, function(err, data) {
+	var playlists = app.db.get('playlists');
+	app.db.get('playlists').findOne({ _id: playlists.id(playlistId), 'tracks._id': track._id }, {}, function(err, data) {
 		if (data === null) {
 			track.rating = 0;
 			track.added = new Date();
-			db.get('playlists').update({ _id: playlists.id(playlistId) }, { $addToSet: { tracks: track } }, { upsert: true }, callback);
+			app.db.get('playlists').update({ _id: playlists.id(playlistId) }, { $addToSet: { tracks: track } }, { upsert: true }, callback);
 		} else {
-			db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': track._id }, { $inc: { 'tracks.$.rating': 1 } }, callback);
+			app.db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': track._id }, { $inc: { 'tracks.$.rating': 1 } }, callback);
 		}
 	});
 }
@@ -143,7 +145,7 @@ addTrack = function(host, extId, callback) {
 							host: host,
 							extId: extId
 						}
-						db.get('tracks').insert(track, callback);
+						app.db.get('tracks').insert(track, callback);
 						downloadTrack(host, extId);
 					}
 				});
@@ -160,8 +162,8 @@ addTrack = function(host, extId, callback) {
  * Callback of the form: function(err, track)
  */
 getTrack = function(id, callback) {
-	var tracks = db.get('tracks');
-	db.get('tracks').findOne({ _id: tracks.id(id) }, {}, callback);
+	var tracks = app.db.get('tracks');
+	app.db.get('tracks').findOne({ _id: tracks.id(id) }, {}, callback);
 }
 
 /**
@@ -170,7 +172,7 @@ getTrack = function(id, callback) {
  * Callback of the form: function(err, playlists)
  */
 getPlaylists = function(callback) {
-	db.get('playlists').find({}, {}, callback);
+	app.db.get('playlists').find({}, {}, callback);
 }
 
 /**
@@ -194,7 +196,7 @@ findTrackByUrl = function(url, callback) {
  * Callback of the form: function(err, track)
  */
 findTrack = function(host, extId, callback) {
-	db.get('tracks').findOne({ 'host': host, 'extId': extId }, {}, callback);
+	app.db.get('tracks').findOne({ 'host': host, 'extId': extId }, {}, callback);
 }
 
 /**
@@ -204,8 +206,8 @@ findTrack = function(host, extId, callback) {
  * Callback of the form: function(err, playlist)
  */
 getPlaylist = function(id, callback) {
-	var playlists = db.get('playlists');
-	db.get('playlists').findOne({ _id: playlists.id(id) }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
+	var playlists = app.db.get('playlists');
+	app.db.get('playlists').findOne({ _id: playlists.id(id) }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
 		if (err || playlist === null) {
 			callback(err, null);
 		} else {
@@ -245,7 +247,7 @@ getPlaylistTracks = function(playlistId, callback) {
  * Callback of the form function(err, track)
  */
 getPlaylistTrack = function(playlistId, trackId, callback) {
-	var playlists = db.get('playlists');
+	var playlists = app.db.get('playlists');
 	playlists.findOne({ _id: playlists.id(playlistId) }, {}, function(err, playlist) {
 		if (err) {
 			callback(err);
@@ -293,15 +295,15 @@ getCurrentTrack = function(playlistId, callback) {
  * Callback of the form: function(err, success)
  */
 addToTrackRating = function(playlistId, trackId, i, callback) {
-	var tracks = db.get('tracks');
-	var playlists = db.get('playlists');
-	db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
+	var tracks = app.db.get('tracks');
+	var playlists = app.db.get('playlists');
+	app.db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
 		if (err) {
 			callback(err);
 		} else if (count === 0) {
 			callback(null, -1);
 		} else {
-			db.get('tracks').update({ _id: tracks.id(trackId) }, { $inc: { rating: i } }, function(err, count) {
+			app.db.get('tracks').update({ _id: tracks.id(trackId) }, { $inc: { rating: i } }, function(err, count) {
 				if (err) {
 					callback(err);
 				} else if (count === 0) {
