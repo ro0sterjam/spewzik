@@ -6,6 +6,7 @@ var youtubedl = require('youtube-dl');
 var request = require('request');
 
 var db = monk('localhost:27017/spewzik');
+//var db = monk(MONGOHQ_URL);
 var dlPath = './tracks';
 
 /**
@@ -14,7 +15,7 @@ var dlPath = './tracks';
 downloadTrack = function(host, extId) {
 	if (host === 'youtube') {
 		var dl = youtubedl.download(
-			'http://www.youtube.com/watch?v=' + extId, 
+			'http://www.youtube.com/watch?v=' + extId,
 			dlPath,
 			['--max-quality=18']);
 
@@ -31,7 +32,7 @@ downloadTrack = function(host, extId) {
 		dl.on('error', function(err) {
 			throw err;
 		});
-		
+
 		dl.on('end', function(data) {
 			//bson.BSON.serialize(object, checkKeys, asBuffer, serializeFunctions)
 			console.log('\nDownload finished!');
@@ -49,7 +50,7 @@ downloadTrack = function(host, extId) {
 /**
  * Parses the URL to retrieve the hostname and external ID.
  * Currently only supports YouTube, and sets the host as 'youtube' in that case.
- * 
+ *
  * Callback of the form: function(err, host, extId)
  */
 parseUrl = function(urlStr, callback) {
@@ -70,11 +71,11 @@ parseUrl = function(urlStr, callback) {
 
 /**
  * Creates a new playlist in the DB with the given name and returns it.
- * 
+ *
  * Callback of form: function(err, playlist)
  */
 createPlaylist = function(playlistName, callback) {
-	var playlist = { 
+	var playlist = {
 		name: playlistName,
 		tracks: []
 	};
@@ -84,7 +85,7 @@ createPlaylist = function(playlistName, callback) {
 /**
  * Adds the given track to the playlist document with the given playlistId in the DB.
  * Returns the updated playlist object.
- * 
+ *
  * Callback of the form: function(err, count)
  */
 addTrackToPlaylist = function(playlistId, track, callback) {
@@ -103,7 +104,7 @@ addTrackToPlaylist = function(playlistId, track, callback) {
 /**
  * Adds the track at the given URL to the DB.
  * Downloads the track using downloadTrack()
- * 
+ *
  * Callback of the form: function(err, track)
  */
 addTrackByUrl = function(url, callback) {
@@ -119,7 +120,7 @@ addTrackByUrl = function(url, callback) {
 /**
  * Adds the track at the given host with the given external ID to the DB.
  * Downloads the track using downloadTrack()
- * 
+ *
  * Callback of the form: function(err, track)
  */
 addTrack = function(host, extId, callback) {
@@ -155,7 +156,7 @@ addTrack = function(host, extId, callback) {
 
 /**
  * Gets the track with the given ID from the DB.
- * 
+ *
  * Callback of the form: function(err, track)
  */
 getTrack = function(id, callback) {
@@ -174,7 +175,7 @@ getPlaylists = function(callback) {
 
 /**
  * Gets the track with the given url from the DB.
- * 
+ *
  * Callback of the form: function(err, track)
  */
 findTrackByUrl = function(url, callback) {
@@ -189,7 +190,7 @@ findTrackByUrl = function(url, callback) {
 
 /**
  * Gets the track with the given host and extId from the DB.
- * 
+ *
  * Callback of the form: function(err, track)
  */
 findTrack = function(host, extId, callback) {
@@ -199,7 +200,7 @@ findTrack = function(host, extId, callback) {
 /**
  * Gets the playlist with the given ID from the DB.
  * Returns the contained tracks in descending rating and and ascending date.
- * 
+ *
  * Callback of the form: function(err, playlist)
  */
 getPlaylist = function(id, callback) {
@@ -223,7 +224,7 @@ getPlaylist = function(id, callback) {
 /**
  * Gets the tracks belonging to the playlist with the given id from the DB.
  * Returns the contained tracks in descending rating and and ascending date.
- * 
+ *
  * Callback of the form: function(err, tracks)
  */
 getPlaylistTracks = function(playlistId, callback) {
@@ -240,7 +241,7 @@ getPlaylistTracks = function(playlistId, callback) {
 
 /**
  * Gets the track with the given ID in the playlist with the given ID.
- * 
+ *
  * Callback of the form function(err, track)
  */
 getPlaylistTrack = function(playlistId, trackId, callback) {
@@ -283,10 +284,10 @@ getCurrentTrack = function(playlistId, callback) {
 
 /**
  * Adds the given value to the rating of the track in the tracks collection and as well as
- * to the rating of the track in the playlist in the playlists collection with the given 
+ * to the rating of the track in the playlist in the playlists collection with the given
  * track ID and playlist ID.
  *
- * The value of count in the callback will be 0 if track failed at updated in playlist, 1 if 
+ * The value of count in the callback will be 0 if track failed at updated in playlist, 1 if
  * track succeeded updating in playlist but not in tracks collection, and 2 if successful in both.
  *
  * Callback of the form: function(err, success)

@@ -1,8 +1,1 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-}
-
-a {
-  color: #00B7FF;
-}
+.altfont{font-family:"Julius Sans One",Helvetica,Arial,sans-serif}html,body{padding:0;margin:0;width:100%}body{background:#04819e;font-family:"Open Sans",Helvetica,Arial,sans-serif;font-weight:100}body a{-webkit-transition:all .3s ease-out;-moz-transition:all .3s ease-out;-o-transition:all .3s ease-out;-ms-transition:all .3s ease-out;transition:all .3s ease-out;text-decoration:none;color:#ffb100}body a:hover{color:#cc8e00}#logo{height:33px}#logo img{margin:10px;float:left}#logo #tagline{color:#000;font-weight:600;font-size:12px;float:left;line-height:33px}.button{-webkit-transition:all .2s ease-out;-moz-transition:all .2s ease-out;-o-transition:all .2s ease-out;-ms-transition:all .2s ease-out;transition:all .2s ease-out;text-shadow:0 -1px 0 #cc8e00;text-shadow:0 1px 0 #ffd066;font-weight:700;color:#000;padding:10px 15px;background:#ffb100;display:inline-block;cursor:pointer;box-shadow:0 10px 0 #cc8e00}.button:hover{margin-top:5px;box-shadow:0 5px 0 #cc8e00}.button:active{margin-top:10px;box-shadow:0 0 0 #cc8e00}#wrapper{text-align:center}#wrapper a{text-transform:uppercase}#wrapper h1{background:#0595b7;padding:10px;text-shadow:0 -1px 0 #036d85;text-shadow:0 1px 0 #28d2fa;font-family:"Julius Sans One",Helvetica,Arial,sans-serif;color:#fff}#wrapper #addWrapper{-webkit-transition:all .2s ease-out;-moz-transition:all .2s ease-out;-o-transition:all .2s ease-out;-ms-transition:all .2s ease-out;transition:all .2s ease-out;margin:20px;height:0;overflow:hidden}
