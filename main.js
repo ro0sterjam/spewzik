@@ -1,15 +1,9 @@
-var monk = require('monk');
 var url = require('url');
 var querystring = require('querystring');
 var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
-
-if ('development' == app.get('env')) {
-	var db = monk('localhost:27017/spewzik');
-} else {	
-	var db = monk(process.env.MONGOHQ_URL);
-}
+var app = require('./app')
 
 var dlPath = './tracks';
 
@@ -83,7 +77,7 @@ createPlaylist = function(playlistName, callback) {
 		name: playlistName,
 		tracks: []
 	};
-	db.get('playlists').insert(playlist, callback);
+	app.db.get('playlists').insert(playlist, callback);
 }
 
 /**
@@ -94,13 +88,13 @@ createPlaylist = function(playlistName, callback) {
  */
 addTrackToPlaylist = function(playlistId, track, callback) {
 	var playlists = db.get('playlists');
-	db.get('playlists').findOne({ _id: playlists.id(playlistId), 'tracks._id': track._id }, {}, function(err, data) {
+	app.db.get('playlists').findOne({ _id: playlists.id(playlistId), 'tracks._id': track._id }, {}, function(err, data) {
 		if (data === null) {
 			track.rating = 0;
 			track.added = new Date();
-			db.get('playlists').update({ _id: playlists.id(playlistId) }, { $addToSet: { tracks: track } }, { upsert: true }, callback);
+			app.db.get('playlists').update({ _id: playlists.id(playlistId) }, { $addToSet: { tracks: track } }, { upsert: true }, callback);
 		} else {
-			db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': track._id }, { $inc: { 'tracks.$.rating': 1 } }, callback);
+			app.db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': track._id }, { $inc: { 'tracks.$.rating': 1 } }, callback);
 		}
 	});
 }
@@ -147,7 +141,7 @@ addTrack = function(host, extId, callback) {
 							host: host,
 							extId: extId
 						}
-						db.get('tracks').insert(track, callback);
+						app.db.get('tracks').insert(track, callback);
 						downloadTrack(host, extId);
 					}
 				});
@@ -165,7 +159,7 @@ addTrack = function(host, extId, callback) {
  */
 getTrack = function(id, callback) {
 	var tracks = db.get('tracks');
-	db.get('tracks').findOne({ _id: tracks.id(id) }, {}, callback);
+	app.db.get('tracks').findOne({ _id: tracks.id(id) }, {}, callback);
 }
 
 /**
@@ -174,7 +168,7 @@ getTrack = function(id, callback) {
  * Callback of the form: function(err, playlists)
  */
 getPlaylists = function(callback) {
-	db.get('playlists').find({}, {}, callback);
+	app.db.get('playlists').find({}, {}, callback);
 }
 
 /**
@@ -198,7 +192,7 @@ findTrackByUrl = function(url, callback) {
  * Callback of the form: function(err, track)
  */
 findTrack = function(host, extId, callback) {
-	db.get('tracks').findOne({ 'host': host, 'extId': extId }, {}, callback);
+	app.db.get('tracks').findOne({ 'host': host, 'extId': extId }, {}, callback);
 }
 
 /**
@@ -209,7 +203,7 @@ findTrack = function(host, extId, callback) {
  */
 getPlaylist = function(id, callback) {
 	var playlists = db.get('playlists');
-	db.get('playlists').findOne({ _id: playlists.id(id) }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
+	app.db.get('playlists').findOne({ _id: playlists.id(id) }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
 		if (err || playlist === null) {
 			callback(err, null);
 		} else {
@@ -299,13 +293,13 @@ getCurrentTrack = function(playlistId, callback) {
 addToTrackRating = function(playlistId, trackId, i, callback) {
 	var tracks = db.get('tracks');
 	var playlists = db.get('playlists');
-	db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
+	app.db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
 		if (err) {
 			callback(err);
 		} else if (count === 0) {
 			callback(null, -1);
 		} else {
-			db.get('tracks').update({ _id: tracks.id(trackId) }, { $inc: { rating: i } }, function(err, count) {
+			app.db.get('tracks').update({ _id: tracks.id(trackId) }, { $inc: { rating: i } }, function(err, count) {
 				if (err) {
 					callback(err);
 				} else if (count === 0) {
