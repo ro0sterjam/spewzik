@@ -24,13 +24,15 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-console.log(process.env);
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
-  var db = monk('localhost:27017/spewzik');
-} else {
-  var db = monk(process.env.MONGOHQ_URL);
 }
+
+// Check if mongodb url is defined, if not use localhost
+if (typeof(process.env.MONGOHQ_URL) == 'undefined') {
+	process.env.MONGOHQ_URL = 'localhost:27017/spewzik';
+}
+var db = monk(process.env.MONGOHQ_URL);
 
 app.get('/', routes.index);
 app.get('/playlists/:playlist_id', routes.getPlaylist);
