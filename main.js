@@ -330,8 +330,4 @@ exports.getPlaylist = getPlaylist;
 exports.getPlaylistTracks = getPlaylistTracks;
 exports.getPlaylistTrack = getPlaylistTrack;
 exports.getCurrentTrack = getCurrentTrack;
-<<<<<<< HEAD
 exports.addToTrackRating = addToTrackRating;
-=======
-exports.addToTrackRating = addToTrackRating;
->>>>>>> 2194643e4680636b929e7a6a11b906473dd36c9c
