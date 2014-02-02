@@ -5,10 +5,10 @@ var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
 
-if ('production' == app.get('env')) {
-	var db = monk(process.env.MONGOHQ_URL);
-} else {
+if ('development' == app.get('env')) {
 	var db = monk('localhost:27017/spewzik');
+} else {	
+	var db = monk(process.env.MONGOHQ_URL);
 }
 
 var dlPath = './tracks';
