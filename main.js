@@ -87,7 +87,7 @@ createPlaylist = function(playlistName, callback) {
  * Callback of the form: function(err, count)
  */
 addTrackToPlaylist = function(playlistId, track, callback) {
-	var playlists = db.get('playlists');
+	var playlists = app.db.get('playlists');
 	app.db.get('playlists').findOne({ _id: playlists.id(playlistId), 'tracks._id': track._id }, {}, function(err, data) {
 		if (data === null) {
 			track.rating = 0;
@@ -158,7 +158,7 @@ addTrack = function(host, extId, callback) {
  * Callback of the form: function(err, track)
  */
 getTrack = function(id, callback) {
-	var tracks = db.get('tracks');
+	var tracks = app.db.get('tracks');
 	app.db.get('tracks').findOne({ _id: tracks.id(id) }, {}, callback);
 }
 
@@ -202,7 +202,7 @@ findTrack = function(host, extId, callback) {
  * Callback of the form: function(err, playlist)
  */
 getPlaylist = function(id, callback) {
-	var playlists = db.get('playlists');
+	var playlists = app.db.get('playlists');
 	app.db.get('playlists').findOne({ _id: playlists.id(id) }, { $orderby: { 'tracks.$.rating' : -1 } }, function(err, playlist) {
 		if (err || playlist === null) {
 			callback(err, null);
@@ -243,7 +243,7 @@ getPlaylistTracks = function(playlistId, callback) {
  * Callback of the form function(err, track)
  */
 getPlaylistTrack = function(playlistId, trackId, callback) {
-	var playlists = db.get('playlists');
+	var playlists = app.db.get('playlists');
 	playlists.findOne({ _id: playlists.id(playlistId) }, {}, function(err, playlist) {
 		if (err) {
 			callback(err);
@@ -291,8 +291,8 @@ getCurrentTrack = function(playlistId, callback) {
  * Callback of the form: function(err, success)
  */
 addToTrackRating = function(playlistId, trackId, i, callback) {
-	var tracks = db.get('tracks');
-	var playlists = db.get('playlists');
+	var tracks = app.db.get('tracks');
+	var playlists = app.db.get('playlists');
 	app.db.get('playlists').update({ _id: playlists.id(playlistId), 'tracks._id': tracks.id(trackId) }, { $inc: { 'tracks.$.rating': i } }, function(err, count) {
 		if (err) {
 			callback(err);
