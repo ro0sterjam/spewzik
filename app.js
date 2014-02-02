@@ -24,7 +24,7 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-console.log(app.get('env'));
+console.log(process.env);
 if ('development' == app.get('env')) {
   app.use(express.errorHandler());
   var db = monk('localhost:27017/spewzik');
