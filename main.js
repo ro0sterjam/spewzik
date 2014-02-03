@@ -4,7 +4,7 @@ var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
 var app = require('./app')
-var db = monk('localhost:27017/spewzik');
+//var db = monk('localhost:27017/spewzik');
 //var db = monk(MONGOHQ_URL);
 var dlPath = './tracks';
 
