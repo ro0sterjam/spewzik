@@ -6,6 +6,21 @@ html
     link(href='http://fonts.googleapis.com/css?family=Julius+Sans+One|Open+Sans:400,300,700,600', rel='stylesheet', type='text/css')
     script(src='/javascripts/jquery-1.10.1.min.js')
     script(src='/javascripts/less-1.6.1.min.js')
+    script(src='/javascripts/jquery-1.10.1.min.js')
+    script(type='text/javascript').
+    
+      var createRoom = function(roomName) {
+        var url = '/rooms/?name=' + roomName;
+        $.ajax({ url: url, type: 'POST', success: function(result) {
+          $('div#rooms').append('<a href=\'/rooms/' + result._id + '/play\'>' + result.name + '</a>');
+        }});
+      }
+    
+      $(document).ready(function(){
+        $('button#addRoom').on('click', function() {
+          createRoom($("input#roomName").val());
+        });
+      });
   body
     div#logo
       img(src='images/logo-black.png')
@@ -20,8 +35,8 @@ html
 
       div#addWrapper
         div#addContainer
-          input#roomName(type="text", placeholder="Playlist Name")
-          button#addPlaylist New Playlist
-      div#openAdd.button Add Playlist
+          input#roomName(type="text", placeholder="Room Name")
+          button#addRoom New Room
+      div#openAdd.button Add Room
 
     script(src='/javascripts/spewzik.js')
