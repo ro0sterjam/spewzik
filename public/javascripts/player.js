@@ -40,17 +40,18 @@ function popFromQueueDetails() {
 }
 
 function loadRoomDetails(room) {
-	var roomDiv = $('div#tracks')[0];
+	$('var#roomName').text(room.name);
 	
+	if (room.playlist.length > 0) {
+		loadCurrentTrackDetails(room.playlist[0]);
+	}
+	
+	var roomDiv = $('div#tracks')[0];
+
 	// Remove all the current track data
 	// Apparently this loop is much faster than setting innerText
 	while (roomDiv.firstChild) {
 		roomDiv.removeChild(roomDiv.firstChild);
-	}
-	
-	if (room.playlist.length > 0) {
-		$('var#roomName').text(room.name);
-		loadCurrentTrackDetails(room.playlist[0]);
 	}
 	
 	for (var i = 0; i < room.playlist.length; i++) {
