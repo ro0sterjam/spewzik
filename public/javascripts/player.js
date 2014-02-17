@@ -61,6 +61,6 @@ function loadRoomDetails(room) {
 }
 
 function addTrackDetails(track) {
-	var roomDiv = $('div#tracks');
+	var roomDiv = $('div#tracks')[0];
 	roomDiv.append('<div data-trackid="' + track._id + '"><p>' + track.name + '</p><p>Rating: <var class="rating" data-trackid="' + track._id + '">' + track.rating + '</var></p><button data-trackid="' + track._id + '" class="vote" data-val="up">Up</button><button data-trackid="' + track._id + '" class="vote" data-val="down">Down</button></div>');
 }
