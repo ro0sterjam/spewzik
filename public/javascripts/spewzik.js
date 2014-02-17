@@ -21,7 +21,7 @@ function leaveRoom(roomId) {
 	socket.emit('leave', roomId);
 	$('div#room').hide();
 	$('#back').hide();
-	$('#title').text($(this).attr('Communities'));
+	$('#title').text('Communities');
 	$('div#front').show();
 	clearTracksDetails();
 }
