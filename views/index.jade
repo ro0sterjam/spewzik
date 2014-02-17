@@ -4,39 +4,40 @@ html
     title=title
     link(rel='stylesheet/less', type='text/css', href='/stylesheets/style.less')
     link(href='http://fonts.googleapis.com/css?family=Julius+Sans+One|Open+Sans:400,300,700,600', rel='stylesheet', type='text/css')
-    script(src='/javascripts/jquery-1.10.1.min.js')
-    script(src='/javascripts/less-1.6.1.min.js')
-    script(src='/javascripts/jquery-1.10.1.min.js')
-    script(type='text/javascript').
-    
-      var createRoom = function(roomName) {
-        var url = '/rooms/?name=' + roomName;
-        $.ajax({ url: url, type: 'POST', success: function(result) {
-          $('div#rooms').append('<a href=\'/rooms/' + result._id + '/play\'>' + result.name + '</a>');
-        }});
-      }
-    
-      $(document).ready(function(){
-        $('button#addRoom').on('click', function() {
-          createRoom($("input#roomName").val());
-        });
-      });
+    script(type='text/javascript', src='/javascripts/jquery-1.10.1.min.js')
+    script(type='text/javascript', src='/javascripts/less-1.6.1.min.js')
+    script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/spewzik.js')
   body
     div#logo
-      img(src='images/logo-black.png')
+      img(src='/images/logo-black.png')
       div#tagline Number one music app in eyeReturn
 
-    div#wrapper
-      h1 Communities
-      div#rooms
-        each room, i in rooms
-          a(href='/rooms/#{room._id}/play') #{room.name} - #{room.listenerCount} listeners
-          br
-
-      div#addWrapper
-        div#addContainer
-          input#roomName(type="text", placeholder="Room Name")
-          button#addRoom New Room
-      div#openAdd.button Add Room
-
-    script(src='/javascripts/spewzik.js')
+    div#header
+      img#back(src='/images/back.png', style='display: none;')
+      h1#title Communities
+      
+    div#content
+    
+      div#front
+        div#rooms
+        div#addWrapper
+          div#addContainer
+            input#roomName(type="text", placeholder="Room Name")
+            button#addRoom New Room
+        div#openAdd.button Add Room
+      
+      div#room(style='display: none;')
+        var#roomId
+        h3 Currently playing : 
+          var#currentTrackName Nothing
+        object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?autoplay=1&enablejsapi=1&playerapiid=ytplayer&version=3')
+          param(name='allowScriptAccess', value='always')
+          param(name='allowFullScreen', value='false')
+        div#controls
+          button#skip Skip
+        div#tracks  
+        div
+          input#trackExtId(type='text', placeholder='Youtube ID')
+          button#addTrack Add Track
+        var#error

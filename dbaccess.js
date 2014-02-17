@@ -192,6 +192,15 @@ function getRooms(callback) {
 }
 
 /**
+ * Gets all the room details from the DB.
+ *
+ * @param callback Callback with the params (err, rooms)
+ */
+function getRoomsDetails(callback) {
+	db.get('rooms').find({}, ['-history', '-playlist', '-tracks'], callback);
+}
+
+/**
  * Gets the room with the given room id.
  *
  * @param roomId ID of the room to get
@@ -422,5 +431,5 @@ exports.getPlaylist = getPlaylist;
 exports.addExternalTrackToPlaylist = addExternalTrackToPlaylist;
 exports.addToTrackRating = addToTrackRating;
 exports.createRoom = createRoom;
-exports.getRooms = getRooms;
+exports.getRoomsDetails = getRoomsDetails;
 exports.getRoom = getRoom;

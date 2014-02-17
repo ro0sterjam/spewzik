@@ -27,8 +27,6 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/rooms/:room_id/play', routes.servePlayPage);
-app.post('/rooms', routes.createPlaylist);
 
 var server = http.createServer(app).listen(app.get('port'), function(){
 	console.log('Express server listening on port ' + app.get('port'));

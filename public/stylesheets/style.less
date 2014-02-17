@@ -2,93 +2,106 @@
 @yellow: #FFB100;
 
 .transition (@prop: all, @time: 1s, @ease: linear) {
-    -webkit-transition: @prop @time @ease;
-    -moz-transition: @prop @time @ease;
-    -o-transition: @prop @time @ease;
-    -ms-transition: @prop @time @ease;
-    transition: @prop @time @ease;
+  -webkit-transition: @prop @time @ease;
+  -moz-transition: @prop @time @ease;
+  -o-transition: @prop @time @ease;
+  -ms-transition: @prop @time @ease;
+  transition: @prop @time @ease;
 }
 
 .bevel (@color) {
-    text-shadow: 0 -1px 0 darken(@color, 10%);
-    text-shadow: 0 1px 0 lighten(@color, 20%);
+  text-shadow: 0 -1px 0 darken(@color, 10%);
+  text-shadow: 0 1px 0 lighten(@color, 20%);
 }
 
 .altfont {
-    font-family: "Julius Sans One", Helvetica, Arial, sans-serif;
+  font-family: "Julius Sans One", Helvetica, Arial, sans-serif;
 }
 
 html, body {
-    padding: 0;
-    margin: 0;
-    width: 100%;
+  padding: 0;
+  margin: 0;
+  width: 100%;
 }
 
 body {
-    background: @blue;
-    font-family: "Open Sans", Helvetica, Arial, sans-serif;
-    font-weight: 100;
-    a {
-        .transition(all, 0.3s, ease-out);
-        text-decoration: none;
-        color: @yellow;
-        &:hover {
-            color: darken(@yellow, 10%);
-        }
+  background: @blue;
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-weight: 100;
+  a {
+    .transition(all, 0.3s, ease-out);
+    text-decoration: none;
+    color: @yellow;
+    &:hover {
+      color: darken(@yellow, 10%);
     }
+  }
 }
 
 #logo {
-    height: 33px;
-    img {
-        margin: 10px;
-        float: left;
-    }
-    #tagline {
-        color: darken(@blue, 50%);
-        font-weight: 600;
-        font-size: 12px;
-        float: left;
-        line-height: 33px;
-    }
+  height: 33px;
+  img {
+    margin: 10px;
+    float: left;
+  }
+  #tagline {
+    color: darken(@blue, 50%);
+    font-weight: 600;
+    font-size: 12px;
+    float: left;
+    line-height: 33px;
+  }
 }
 
 .button {
-    .transition(all, 0.2s, ease-out);
-    .bevel(@yellow);
-    font-weight: 700;
-    color: black;
-    padding: 10px 15px;
-    background: @yellow;
-    display: inline-block;
-    cursor: pointer;
-    box-shadow: 0 10px 0 darken(@yellow, 10%);
-    &:hover {
-        margin-top: 5px;
-        box-shadow: 0 5px 0 darken(@yellow, 10%);
-    }
-    &:active {
-        margin-top: 10px;
-        box-shadow: 0 0 0 darken(@yellow, 10%);
-    }
+  .transition(all, 0.2s, ease-out);
+  .bevel(@yellow);
+  font-weight: 700;
+  color: black;
+  padding: 10px 15px;
+  background: @yellow;
+  display: inline-block;
+  cursor: pointer;
+  box-shadow: 0 10px 0 darken(@yellow, 10%);
+  &:hover {
+    margin-top: 5px;
+    box-shadow: 0 5px 0 darken(@yellow, 10%);
+  }
+  &:active {
+    margin-top: 10px;
+    box-shadow: 0 0 0 darken(@yellow, 10%);
+  }
 }
 
-#wrapper {
+#header {
+  background: lighten(@blue, 5%);
+  #back {
+    float: left;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: 10px;
+  }
+  #title {
     text-align: center;
-    a {
-        text-transform: uppercase;
-    }
-    h1 {
-        background: lighten(@blue, 5%);
-        padding: 10px;
-        .bevel(lighten(@blue, 5%));
-        .altfont;
-        color: white;
-    }
-    #addWrapper {
-        .transition(all, 0.2s, ease-out);
-        margin: 20px;
-        height: 0;
-        overflow: hidden;
-    }
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    .altfont;
+    color: white;
+    padding: 10px;
+    .bevel(lighten(@blue, 5%));
+  }
+}
+
+#content {
+  text-align: center;
+  a {
+    text-transform: uppercase;
+  }
+  #addWrapper {
+    .transition(all, 0.2s, ease-out);
+    margin: 20px;
+    height: 0;
+    overflow: hidden;
+  }
 }
