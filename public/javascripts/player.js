@@ -48,14 +48,13 @@ function loadRoomDetails(room) {
 		roomDiv.removeChild(roomDiv.firstChild);
 	}
 	
-	if (room.tracks.length > 0) {
+	if (room.playlist.length > 0) {
 		$('var#roomName').text(room.name);
 		loadCurrentTrackDetails(room.playlist[0]);
 	}
 	
-	for (var i = 0; i < room.tracks.length; i++) {
-		var track = room.playlist[i];
-		addTrackDetails(track);
+	for (var i = 0; i < room.playlist.length; i++) {
+		addTrackDetails(room.playlist[i]);
 	}
 	
 }
