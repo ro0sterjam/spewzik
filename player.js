@@ -43,16 +43,16 @@ function playTrack(roomId, track) {
 	roomTimers[roomId] = setTimeout(function() {
 		delete(roomTimers[roomId]);
 		delete(roomStartTimes[roomId]);
-		playNext(roomId);
+		playNext(roomId, false);
 	}, (track.duration + trackWaitTime) * 1000);
 }
 
-function playNext(roomId) {
+function playNext(roomId, skipped) {
 	if (typeof(roomTimers[roomId]) !== 'undefined') {
 		clearInterval(roomTimers[roomId]);
 		delete(roomTimers[roomId]);
 	}
-	dbaccess.playNext(roomId, function(err, track) {
+	dbaccess.playNext(roomId, skipped, function(err, track) {
 		if (err) {
 			app.io.sockets.in(roomId).emit('error', err.message);
 		} else if (track === null) {
@@ -80,7 +80,7 @@ function checkIfShouldSkip(roomId) {
 		}
 	}
 	if (skips * 1.0 / clients.length > percentToSkip) {
-		playNext(roomId);
+		playNext(roomId, true);
 	}
 }
 

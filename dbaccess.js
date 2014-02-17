@@ -94,6 +94,7 @@ function addTrackToTracks(host, eid, callback) {
 							duration: parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds),
 							rating: 0,
 							playCount: 0,
+							added: Date(),
 							host: host,
 							eid: eid
 						}
@@ -154,9 +155,10 @@ function addTrackToPlaylist(roomId, track, callback) {
  * Pops the top track from the playlist of the given room to the history stack.
  * 
  * @param roomId ID of the room to play next of
+ * @param skipped Whether or not the track was skipped
  * @param callback Callback with the params (err, track)
  */
-function playNext(roomId, callback) {
+function playNext(roomId, skipped, callback) {
 	db.get('rooms').findAndModify(
 		{ _id: roomId, playlist: { $not: { $size: 0 } } },
 		{ $pop: { playlist: -1 } },
@@ -173,10 +175,96 @@ function playNext(roomId, callback) {
 						callback(err);
 					} else if (count === 0) {
 						callback(new Error('could not add to history'));
+					} else if (skipped) {	
+						incTrackSkippedCount(roomId, oldTrack._id, function(err) {
+							if (err) {
+								callback(err);
+							} else {
+								callback(null, nextTrack);
+							}
+						});
 					} else {
-						callback(null, nextTrack);
+						incTrackPlayedCount(roomId, oldTrack._id, function(err) {
+							if (err) {
+								callback(err);
+							} else {
+								callback(null, nextTrack);
+							}
+						});
 					}
 				});
+			}
+		}
+	);
+}
+
+/**
+ * Marks the given track in the given room as skipped in both room tracks and tracks db.
+ *
+ * @param roomId ID of the room in which to mark the track as skipped
+ * @param trackId ID of the track to mark as skipped
+ * @param callback Callback with the params (err)
+ */
+function incTrackSkippedCount(roomId, trackId, callback) {
+	trackId = db.get('tracks').id(trackId);
+	db.get('rooms').update(
+		{ _id: roomId, 'tracks._id': trackId },
+		{ $inc: { 'tracks.$.timesSkipped': 1 } },
+		function(err, count) {
+			if (err) {
+				callback(err);
+			} else if (count === 0) {
+				callback(new Error('track not in room'));
+			} else {
+				db.get('tracks').update(
+					{ _id: trackId },
+					{ $inc: { timesSkipped: 1 } },
+					function(err, count) {
+						if (err) {
+							callback(err);
+						} else if (count === 0) {
+							callback(new Error('track not in database'));
+						} else {
+							callback(null);
+						}
+					}
+				);
+			}
+		}
+	);
+}
+
+/**
+ * Increments the play count of the given track in the given room tracks and tracks db.
+ *
+ * @param roomId ID of the room in which to increment the track play count
+ * @param trackId ID of the track in which to increment the play count
+ * @param callback Callback with the params (err)
+ */
+function incTrackPlayedCount(roomId, trackId, callback) {
+	trackId = db.get('tracks').id(trackId);
+	db.get('rooms').update(
+		{ _id: roomId, 'tracks._id': trackId },
+		{ $inc: { 'tracks.$.playCount': 1 } },
+		function(err, count) {
+			if (err) {
+				callback(err);
+			} else if (count === 0) {
+				callback(new Error('track not in room'));
+			} else {
+				db.get('tracks').update(
+					{ _id: trackId },
+					{ $inc: { playCount: 1 } },
+					function(err, count) {
+						if (err) {
+							callback(err);
+						} else if (count === 0) {
+							callback(new Error('track not in database'));
+						} else {
+							callback(null);
+						}
+					}
+				);
 			}
 		}
 	);
