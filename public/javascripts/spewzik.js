@@ -23,6 +23,10 @@ function leaveRoom(roomId) {
 	$('#back').hide();
 	$('#title').text($(this).attr('Communities'));
 	$('div#front').show();
+	clearTracksDetails();
+}
+
+function clearTracksDetails() {
 	var roomDiv = $('div#tracks')[0];
 	while (roomDiv.firstChild) {
 		roomDiv.removeChild(roomDiv.firstChild);
@@ -44,14 +48,19 @@ function loadPlayingDetails(track) {
 	$('#currentTrackName').text(track.name);
 }
 
-function popFromQueueDetails() {
+function popFromQueueDetails(track) {
 	var roomDiv = $('div#tracks')[0];
-	if (roomDiv.firstChild) {
+	if (roomDiv.firstChild && $(roomDiv.firstChild).attr('data-trackid') === track._id) {
 		roomDiv.removeChild(roomDiv.firstChild);
+	} else {
+		console.log('playlist out of sync refetch');
+		var roomId = $('var#roomId').attr('data-val');
+		socket.emit('refetch', roomId);
 	}
 }
 
 function loadQueueDetails(playlist) {
+	clearTracksDetails();
 	for (var i = 0; i < playlist.length; i++) {
 		addTrackDetails(playlist[i]);
 	}
@@ -92,7 +101,7 @@ $(document).ready(function(){
 		var ytplayer = document.getElementById('ytplayer');
 		ytplayer.loadVideoById(data.track.eid, data.start);
 		loadPlayingDetails(data.track);
-		popFromQueueDetails();
+		popFromQueueDetails(data.track);
 	});
 	
 	socket.on('stop', function() {
