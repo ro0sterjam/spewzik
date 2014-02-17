@@ -1,9 +1,11 @@
 doctype html
 html
   head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
+    title=title
+    link(rel='stylesheet/less', type='text/css', href='/stylesheets/style.less')
+    link(href='http://fonts.googleapis.com/css?family=Julius+Sans+One|Open+Sans:400,300,700,600', rel='stylesheet', type='text/css')
     script(src='/javascripts/jquery-1.10.1.min.js')
+<<<<<<< HEAD
     script(type='text/javascript').
     
       var createRoom = function(roomName) {
@@ -27,3 +29,25 @@ html
         br
     input#roomName(type="text", placeholder="Room Name")
     button#addRoom New Room
+=======
+    script(src='/javascripts/less-1.6.1.min.js')
+  body
+    div#logo
+      img(src='images/logo-black.png')
+      div#tagline Number one music app in eyeReturn
+
+    div#wrapper
+      h1 Communities
+      div#playlists
+        each playlist, i in playlists
+          a(href='/playlists/#{playlist._id}/play') #{playlist.name} - #{playlist.listenerCount} listeners
+          br
+
+      div#addWrapper
+        div#addContainer
+          input#playlistName(type="text", placeholder="Playlist Name")
+          button#addPlaylist New Playlist
+      div#openAdd.button Add Playlist
+
+    script(src='/javascripts/spewzik.js')
+>>>>>>> 9018b0bd55d6a5a4ad819579b3dfa57185543600

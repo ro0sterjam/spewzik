@@ -22,6 +22,7 @@ High-level Reqs:
 - Connect/stream music from community
 - Add song to community
 - Vote songs up and down
+- http://strd6.com/2011/09/html5-javascript-pasting-image-data-in-chrome/ to capture paste data maybe
 
 It's probably a good idea to set up the backend as a separate REST service
 
