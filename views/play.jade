@@ -3,66 +3,46 @@ html
   head
     title= title
     link(rel='stylesheet', href='/stylesheets/style.css')
-    script(src='/javascripts/jquery-1.10.1.min.js')
+    script(type='text/javascript', src='/javascripts/jquery-1.10.1.min.js')
+    script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/player.js')
     script(type='text/javascript').
+      var socket = io.connect();
     
-      var addTrack = function(trackExtId) {
-        var url = '/playlists/' + '#{playlist._id}' + '/tracks?host=youtube&eid=' + trackExtId;
-        $.ajax({ 
-          url: url, 
-          type: 'POST', 
-          success: function(track) {
-            if ($("var[data-trackid='" + track._id + "']").length > 0) {
-              $($("var[data-trackid='" + track._id + "']")).text(track.rating);
-              $('var#messageArea').text('Track already exists, upvoted');
-            } else {
-              $('div#tracks').append('<p>' + track.name + '</p><p>Rating: <var class=\'rating\' data-trackid=\'' + track._id + '\'>' + track.rating + '</var></p><button class=\'upvote\' data-trackid=\'' + track._id + '\'>Up</button><button class=\'downvote\' data-trackid=\'' + track._id + '\'>Down</button>');
-              $('var#messageArea').text('');
-            }
-          },
-          error: function(error) {
-            if (typeof(error.responseJSON) !== 'undefined') {
-              $('var#messageArea').text(error.responseJSON.error);
-            } else if (error.statusText) {
-              $('var#messageArea').text(error.statusText);
-            } else {
-              $('var#messageArea').text('Unknown error occurred');
-            }
-          }
-        });
-      }
-    
-      var vote = function(val, trackId) {
-        var voteUrl = '/playlists/' + '#{playlist._id}' + '/tracks/' + trackId + '/' + val;
-        $.ajax({ url: voteUrl, type: 'PUT', success: function(track) {
-          $($("var[data-trackid='" + trackId + "']")).text(track.rating);
-        }});
-      }
-      
-      $(document).on("click", "button.upvote", function(){
-        vote('up', $(this).attr('data-trackid'));
+      $(document).on('click', 'button.vote', function(){
+        var trackId = $(this).attr('data-trackid');
+        var val = $(this).attr('data-val');
+        var roomId = $('var#roomId').attr('data-val');
+        socket.emit('vote', { roomId: roomId, trackId: trackId, val: val });
+      });
+
+      $(document).on('click', 'button#skip', function(){
+        var roomId = $('var#roomId').attr('data-val');
+        socket.emit('skip', roomId);
+      });
+
+      $(document).on('click', 'button#addTrack', function(){
+        var trackEid = $('input#trackExtId').val();
+        var roomId = $('var#roomId').attr('data-val');
+        socket.emit('newTrack', { roomId: roomId, trackEid: trackEid });
+        $('input#trackExtId').val('');
       });
       
-      $(document).on("click", "button.downvote", function(){
-        vote('down', $(this).attr('data-trackid'));
-      });
-      
-      $(document).on("click", "button#addTrack", function(){
-        addTrack($("input#trackExtId").val());
-      });
   body
-    h1 Welcome to room #{playlist.name}
-    if playlist.tracks.length > 0
-      p Current playing '#{playlist.tracks[0].name}'
+    var#roomId(data-val='#{roomId}')
+    h1 Welcome to room
+    var#roomName
+    p Currently playing
+    var#currentTrackName
+    div
+      object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?autoplay=1&enablejsapi=1&playerapiid=ytplayer&version=3')
+        param(name='allowScriptAccess', value='always')
+        param(name='allowFullScreen', value='false')
+    button#skip Skip
     h3 Tracks
     div#tracks
-      each track, i in playlist.tracks
-        p #{track.name}
-        p Rating: <var class='rating' data-trackid='#{track._id}'>#{track.rating}</var>
-        button.upvote(data-trackid='#{track._id}') Up
-        button.downvote(data-trackid='#{track._id}') Down
-    input#trackExtId(type="text", placeholder="Youtube ID")
+    input#trackExtId(type='text', placeholder='Youtube ID')
     button#addTrack New Track
     br
     br
-    var#messageArea
+    var#error

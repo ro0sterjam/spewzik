@@ -12,6 +12,7 @@
     "monk": "*",
     "youtube-dl": "*",
     "xml2js": "*",
-    "request": "*"
+    "request": "*",
+    "socket.io": "*"
   }
 }

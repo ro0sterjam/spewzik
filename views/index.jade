@@ -6,24 +6,24 @@ html
     script(src='/javascripts/jquery-1.10.1.min.js')
     script(type='text/javascript').
     
-      var createPlaylist = function(playlistName) {
-        var url = '/playlists/?name=' + playlistName;
+      var createRoom = function(roomName) {
+        var url = '/rooms/?name=' + roomName;
         $.ajax({ url: url, type: 'POST', success: function(result) {
-          $('div#playlists').append('<a href=\'/playlists/' + result._id + '/play\'>' + result.name + '</a>');
+          $('div#rooms').append('<a href=\'/rooms/' + result._id + '/play\'>' + result.name + '</a>');
         }});
       }
     
       $(document).ready(function(){
-        $('button#addPlaylist').on('click', function() {
-          createPlaylist($("input#playlistName").val());
+        $('button#addRoom').on('click', function() {
+          createRoom($("input#roomName").val());
         });
       });
   body
     h1= title
     p Welcome to YOUR DEATH
-    div#playlists
-      each playlist, i in playlists
-        a(href='/playlists/#{playlist._id}/play') #{playlist.name}
+    div#rooms
+      each room, i in rooms
+        a(href='/rooms/#{room._id}/play') #{room.name}
         br
-    input#playlistName(type="text", placeholder="Playlist Name")
-    button#addPlaylist New Playlist
+    input#roomName(type="text", placeholder="Room Name")
+    button#addRoom New Room
