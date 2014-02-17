@@ -113,11 +113,11 @@ $(document).ready(function(){
 		socket.emit('ready', roomId);
 	});
 
-	socket.on('play', function(data) {
+	socket.on('play', function(track) {
 		var ytplayer = document.getElementById('ytplayer');
-		ytplayer.loadVideoById(data.track.eid, data.start);
-		loadPlayingDetails(data.track);
-		popFromQueueDetails(data.track);
+		ytplayer.loadVideoById(track.eid, track.pos);
+		loadPlayingDetails(track);
+		popFromQueueDetails(track);
 	});
 	
 	socket.on('stop', function() {

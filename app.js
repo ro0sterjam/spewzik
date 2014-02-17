@@ -27,11 +27,17 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
+app.get('/rooms/:room_id', routes.getRoom);
+app.get('/rooms/:room_id/current', routes.getCurrentTrack);
+app.post('/rooms/:room_id/tracks', routes.addTrackToPlaylist);
 
 var server = http.createServer(app).listen(app.get('port'), function(){
 	console.log('Express server listening on port ' + app.get('port'));
 });
 
-io = require('socket.io').listen(server);
+var io = require('socket.io').listen(server);
+player.startPlayingAllRooms();
+
 io.sockets.on('connection', player.connectSocket);
+
 exports.io = io;
