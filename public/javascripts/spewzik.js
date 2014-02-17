@@ -1,7 +1,25 @@
 var socket;
 
+String.prototype.replaceAll = function (find, replace) {
+    var str = this;
+    return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+};
+
 function addRoomDetails(room) {
-	$('div#rooms').append('<a href="#" data-roomid="' + room._id + '" data-roomname="' + room.name + '" class="roomLink">' + room.name + ' - <var data-roomid="' + room._id + '" class="listenersCount">' + room.listeners + '</var> listeners</a><br>');
+	var roomLinkHtml = $('div#roomLinkHtml').html();
+	roomLinkHtml = roomLinkHtml.replaceAll('{roomId}', room._id);
+	roomLinkHtml = roomLinkHtml.replaceAll('{roomName}', room.name);
+	roomLinkHtml = roomLinkHtml.replaceAll('{roomListeners}', room.listeners);
+	$('div#rooms').append(roomLinkHtml);
+}
+
+function addTrackDetails(track) {
+	console.log('adding track');
+	var trackHtml = $('div#trackHtml').html();
+	trackHtml = trackHtml.replaceAll('{trackId}', track._id);
+	trackHtml = trackHtml.replaceAll('{trackName}', track.name);
+	trackHtml = trackHtml.replaceAll('{trackRating}', track.rating);
+	$('div#tracks').append(trackHtml);
 }
 
 function createRoom(roomName) {
@@ -40,7 +58,9 @@ function onYouTubePlayerReady(playerApiId) {
 
 function stopPlayer() {
 	var ytplayer = document.getElementById('ytplayer');
-	ytplayer.stopVideo();
+	if (ytplayer.stopVideo) {
+		ytplayer.stopVideo();
+	}
 	$('#currentTrackName').text('Nothing');
 }
 
@@ -64,10 +84,6 @@ function loadQueueDetails(playlist) {
 	for (var i = 0; i < playlist.length; i++) {
 		addTrackDetails(playlist[i]);
 	}
-}
-
-function addTrackDetails(track) {
-	$('div#tracks').append('<div class="track" data-trackid="' + track._id + '"><p>' + track.name + '</p><p>Rating: <var class="rating" data-trackid="' + track._id + '">' + track.rating + '</var></p><button class="vote" data-trackid="' + track._id + '" data-val="up">Up</button><button class="vote" data-trackid="' + track._id + '" data-val="down">Down</button></div>');
 }
 
 $(document).ready(function(){

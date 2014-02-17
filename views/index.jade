@@ -21,9 +21,15 @@ html
     
       div#front
         div#rooms
+          div#roomLinkHtml(style='display: none;')
+            a.roomLink(href='#', data-roomid='{roomId}', data-roomname='{roomName}')
+              | {roomName} - 
+              var.listenersCount(data-roomid='{roomId}') {roomListeners}
+              |  listeners
+            br
         div#addWrapper
           div#addContainer
-            input#roomName(type="text", placeholder="Room Name")
+            input#roomName(type='text', placeholder='Room Name')
             button#addRoom New Room
         div#openAdd.button Add Room
       
@@ -36,7 +42,14 @@ html
           param(name='allowFullScreen', value='false')
         div#controls
           button#skip Skip
-        div#tracks  
+        div#tracks
+        div#trackHtml(style='display: none;')
+          div.track(data-trackid='{trackId}')
+            p {trackName}
+            p Rating: 
+              var.rating(data-trackid='{trackId}') {trackRating}
+            button.vote(data-trackid='{trackId}', data-val='up') Up  
+            button.vote(data-trackid='{trackId}', data-val='down') Down              
         div
           input#trackExtId(type='text', placeholder='Youtube ID')
           button#addTrack Add Track
