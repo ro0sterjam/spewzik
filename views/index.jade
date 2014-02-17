@@ -5,31 +5,6 @@ html
     link(rel='stylesheet/less', type='text/css', href='/stylesheets/style.less')
     link(href='http://fonts.googleapis.com/css?family=Julius+Sans+One|Open+Sans:400,300,700,600', rel='stylesheet', type='text/css')
     script(src='/javascripts/jquery-1.10.1.min.js')
-<<<<<<< HEAD
-    script(type='text/javascript').
-    
-      var createRoom = function(roomName) {
-        var url = '/rooms/?name=' + roomName;
-        $.ajax({ url: url, type: 'POST', success: function(result) {
-          $('div#rooms').append('<a href=\'/rooms/' + result._id + '/play\'>' + result.name + '</a>');
-        }});
-      }
-    
-      $(document).ready(function(){
-        $('button#addRoom').on('click', function() {
-          createRoom($("input#roomName").val());
-        });
-      });
-  body
-    h1= title
-    p Welcome to YOUR DEATH
-    div#rooms
-      each room, i in rooms
-        a(href='/rooms/#{room._id}/play') #{room.name}
-        br
-    input#roomName(type="text", placeholder="Room Name")
-    button#addRoom New Room
-=======
     script(src='/javascripts/less-1.6.1.min.js')
   body
     div#logo
@@ -38,16 +13,15 @@ html
 
     div#wrapper
       h1 Communities
-      div#playlists
-        each playlist, i in playlists
-          a(href='/playlists/#{playlist._id}/play') #{playlist.name} - #{playlist.listenerCount} listeners
+      div#rooms
+        each room, i in rooms
+          a(href='/rooms/#{room._id}/play') #{room.name} - #{room.listenerCount} listeners
           br
 
       div#addWrapper
         div#addContainer
-          input#playlistName(type="text", placeholder="Playlist Name")
+          input#roomName(type="text", placeholder="Playlist Name")
           button#addPlaylist New Playlist
       div#openAdd.button Add Playlist
 
     script(src='/javascripts/spewzik.js')
->>>>>>> 9018b0bd55d6a5a4ad819579b3dfa57185543600
