@@ -18,14 +18,26 @@ exports.addTrackToPlaylist = function(req, res) {
 		player.addTrackToPlaylist(roomId, query.host, query.eid, function(err, track) {
 			if (err) {
 				res.send(500, { error: err.message });
+			} else if (track === null) {
+				res.send(409, { error: 'Track already queued in playlist'});
 			} else {
-				res.redirect('/rooms/' + roomId + '/tracks/' + track._id, 303);
+				res.send(200, track);
 			}
 		});
 	} else {
 		res.send(400, { error: 'malformed query' });
 	}
 };
+
+exports.getRoomsDetails = function(req, res) {
+	player.getRoomsDetails(function(err, rooms) {
+		if (err) {
+			res.send(500, { error: err.message });
+		} else {
+			res.send(200, rooms);
+		}
+	});
+}
 
 /**
  * Serves the room with the given room ID to the response.

@@ -141,7 +141,7 @@ function addTrackToPlaylist(roomId, track, callback) {
 						if (err) {
 							callback(err);
 						} else if (room === null) {
-							callback(new Error('Track already queued in playlist'));
+							callback(null, null);
 						} else {
 							callback(null, track);
 						}

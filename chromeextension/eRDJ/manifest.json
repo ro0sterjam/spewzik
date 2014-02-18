@@ -1,0 +1,17 @@
+{
+  "name": "spewzik",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "This extension adds youtube tracks to spewzik.",
+  
+  "browser_action": {
+    "name": "add track"
+  },
+  
+  "homepage_url": "http://spewzik.herokuapp.com/",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "options_page": "options.html",
+  "permissions": [ "http://*/", "notifications" ]
+}

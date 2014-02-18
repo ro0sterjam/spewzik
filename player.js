@@ -10,7 +10,7 @@ var roomTimers;
 function startPlayingAllRooms() {
 	roomStartTimes = {};
 	roomTimers = {};
-	dbaccess.getRoomsDetails(function(err, rooms) {
+	getRoomsDetails(function(err, rooms) {
 		for (var i in rooms) {
 			startPlaying(rooms[i]._id);
 		}
@@ -106,13 +106,13 @@ function addTrackToPlaylist(roomId, host, eid, callback) {
 	dbaccess.addExternalTrackToPlaylist(host, eid, roomId, function(err, track) {
 		if (err) {
 			callback(err);
-		} else {
+		} else if (track) {
 			app.io.sockets.in(roomId).emit('track', track);
 			if (!wasPlaying) {
 				startPlaying(roomId);
 			}
-			callback(null, track);
 		}
+		callback(null, track);
 	});
 }
 
@@ -134,9 +134,13 @@ function getRoom(roomId, callback) {
 	dbaccess.getRoom(roomId, callback);
 }
 
+function getRoomsDetails(callback) {
+	dbaccess.getRoomsDetails(callback);
+}
+
 function connectSocket(socket) {
 	
-	dbaccess.getRoomsDetails(function(err, rooms) {
+	getRoomsDetails(function(err, rooms) {
 		if (err) {
 			socket.emit('error', err.message);
 		} else if (rooms) {
@@ -261,3 +265,4 @@ exports.startPlayingAllRooms = startPlayingAllRooms;
 exports.addTrackToPlaylist = addTrackToPlaylist;
 exports.getCurrentTrack = getCurrentTrack;
 exports.getRoom = getRoom;
+exports.getRoomsDetails = getRoomsDetails;
