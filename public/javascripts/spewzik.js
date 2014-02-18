@@ -30,6 +30,7 @@ function joinRoom(roomId, roomName) {
 	$('var#roomId').attr('data-val', roomId);
 	$('div#front').hide();
 	$('#title').text(roomName);
+	$('var#mainListenersCount').attr('data-roomid', roomId);
 	$('div#room').show();
 	$('#back').show();
 }
@@ -40,6 +41,8 @@ function leaveRoom(roomId) {
 	$('div#room').hide();
 	$('#back').hide();
 	$('#title').text('Communities');
+	$('var#mainListenersCount').removeAttr('data-roomid');
+	$('var#mainListenersCount').text(0);
 	$('div#front').show();
 	clearTracksDetails();
 }

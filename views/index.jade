@@ -41,6 +41,9 @@ html
           param(name='allowScriptAccess', value='always')
           param(name='allowFullScreen', value='false')
         div#controls
+          p
+            var#mainListenersCount.listenersCount 0
+            |  listeners
           button#skip Skip
         div#tracks
         div#trackHtml(style='display: none;')
