@@ -20,13 +20,10 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 					var data = JSON.parse(response.responseText);
 					if (response.status === 200) {
 						alert('Success: Track added to \'' + roomName + '\'');
-						webkitNotifications.createNotification('', 'Success', 'Track added to ' + roomName);
 					} else if (data.error) {
 						alert('Error: ' + data.error);
-						webkitNotifications.createNotification('', 'Error', data.error);
 					} else {
 						alert('Error: unknown');
-						webkitNotifications.createNotification('', 'Error', 'unknown');
 					}
 				});
 			}
