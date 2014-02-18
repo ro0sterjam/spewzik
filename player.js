@@ -49,7 +49,7 @@ function playTrack(roomId, track) {
 
 function playNext(roomId, skipped) {
 	if (typeof(roomTimers[roomId]) !== 'undefined') {
-		clearInterval(roomTimers[roomId]);
+		clearTimeout(roomTimers[roomId]);
 		delete(roomTimers[roomId]);
 	}
 	dbaccess.playNext(roomId, skipped, function(err, track) {
