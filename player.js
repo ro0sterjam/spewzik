@@ -122,8 +122,7 @@ function getCurrentTrack(roomId, callback) {
 			callback(err);
 		} else {
 			if (track) {
-				var start = Math.max(0, process.hrtime(roomStartTimes[roomId])[0] - trackWaitTime);
-				track.pos = start;
+				track.pos = process.hrtime(roomStartTimes[roomId])[0];
 			}
 			callback(null, track);
 		}
