@@ -1,8 +1,8 @@
 var dbaccess = require('./dbaccess');
 var app = require('./app');
 
-var trackWaitTime = 5;
-var percentToSkip = 0.8;
+NEXT_TRACK_DELAY = 5;
+RATIO_TO_SKIP = 0.6;
 
 var roomStartTimes;
 var roomTimers;
@@ -44,7 +44,7 @@ function playTrack(roomId, track) {
 		delete(roomTimers[roomId]);
 		delete(roomStartTimes[roomId]);
 		playNext(roomId, false);
-	}, (track.duration + trackWaitTime) * 1000);
+	}, (track.duration + NEXT_TRACK_DELAY) * 1000);
 }
 
 function playNext(roomId, skipped) {
@@ -71,7 +71,7 @@ function resetForNewTrack(roomId) {
 	}
 }
 
-function checkIfShouldSkip(roomId) {
+function getSkipCount(roomId, callback) {
 	var clients = app.io.sockets.clients(roomId);
 	var skips = 0;
 	for (var i in clients) {
@@ -79,9 +79,22 @@ function checkIfShouldSkip(roomId) {
 			skips = skips + 1;
 		}
 	}
-	if (skips * 1.0 / clients.length > percentToSkip) {
-		playNext(roomId, true);
-	}
+	callback(skips, clients.length);
+}
+
+function skipCheck(roomId) {
+	getSkipCount(roomId, function(skips, numClients) {
+		app.io.sockets.in(roomId).emit('skips', { skips: skips, total: numClients });
+		if (skips * 1.0 / numClients > RATIO_TO_SKIP) {
+			playNext(roomId, true);
+		}
+	});
+}
+
+function emitSkipCount(socket, roomId) {
+	getSkipCount(roomId, function(skips, numClients) {
+		socket.emit('skips', { skips: skips, total: numClients });
+	});
 }
 
 function emitListenersCount(roomId) {
@@ -171,6 +184,7 @@ function connectSocket(socket) {
 		emitListenersCount(roomId);
 		
 		emitPlaylistToClient(socket, roomId);
+		emitSkipCount(socket, roomId);
 	});
 	
 	socket.on('refetch', function(roomId) {
@@ -196,11 +210,12 @@ function connectSocket(socket) {
 	socket.on('leave', function(roomId) {
 		console.log('leaving room: ' + roomId);
 		socket.set('roomId', null);
+		socket.set('skip', false);
 		socket.leave(roomId);
 		emitListenersCount(roomId);
 		console.log('clients in room (' + roomId + '): ' + app.io.sockets.clients(roomId).length);
 		if (isPlaying(roomId)) {
-			checkIfShouldSkip(roomId);
+			skipCheck(roomId);
 		}
 	});
 
@@ -240,7 +255,7 @@ function connectSocket(socket) {
 		console.log('skipping in room: ' + roomId);
 		if (isPlaying(roomId)) {
 			socket.set('skip', true);
-			checkIfShouldSkip(roomId);
+			skipCheck(roomId);
 		}
 	});
 	
@@ -252,7 +267,7 @@ function connectSocket(socket) {
 			emitListenersCount(roomId);
 			console.log('clients in room (' + roomId + '): ' + app.io.sockets.clients(roomId).length);
 			if (isPlaying(roomId)) {
-				checkIfShouldSkip(roomId);
+				skipCheck(roomId);
 			}
 		}
 	});

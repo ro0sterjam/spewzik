@@ -26,6 +26,14 @@ function createRoom(roomName) {
 	socket.emit('room', roomName);
 }
 
+function resetRoom() {
+	$('var#mainListenersCount').removeAttr('data-roomid');
+	$('var#mainListenersCount').text(0);
+	$('var#skipsCount').text(0);
+	$('#error').text('');
+	clearTracksDetails();
+}
+
 function joinRoom(roomId, roomName) {
 	$('var#roomId').attr('data-val', roomId);
 	$('div#front').hide();
@@ -38,13 +46,11 @@ function joinRoom(roomId, roomName) {
 function leaveRoom(roomId) {
 	stopPlayer();
 	socket.emit('leave', roomId);
+	$('#title').text('Communities');
 	$('div#room').hide();
 	$('#back').hide();
-	$('#title').text('Communities');
-	$('var#mainListenersCount').removeAttr('data-roomid');
-	$('var#mainListenersCount').text(0);
 	$('div#front').show();
-	clearTracksDetails();
+	resetRoom();
 }
 
 function clearTracksDetails() {
@@ -120,11 +126,13 @@ $(document).ready(function(){
 		var ytplayer = document.getElementById('ytplayer');
 		ytplayer.loadVideoById(track.eid, track.pos);
 		loadPlayingDetails(track);
+		$('var#skipsCount').text(0);
 		popFromQueueDetails(track);
 	});
 	
 	socket.on('stop', function() {
 		stopPlayer();
+		$('var#skipsCount').text(0);
 	});
 
 	socket.on('track', function(track) {
@@ -133,6 +141,10 @@ $(document).ready(function(){
 	
 	socket.on('trackUpdate', function(track) {
 		$($("var.rating[data-trackid='" + track._id + "']")).text(track.rating);
+	});
+	
+	socket.on('skips', function(data) {
+		$('var#skipsCount').text(data.skips);
 	});
 
 });
