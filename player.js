@@ -1,8 +1,8 @@
 var dbaccess = require('./dbaccess');
 var app = require('./app');
 
-NEXT_TRACK_DELAY = 5;
-RATIO_TO_SKIP = 0.6;
+var NEXT_TRACK_DELAY = 5;
+var RATIO_TO_SKIP = 0.6;
 
 var roomStartTimes;
 var roomTimers;
