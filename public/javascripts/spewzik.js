@@ -35,8 +35,6 @@ function resetRoom() {
 }
 
 function joinRoom(roomId, roomName) {
-    localStorage.setItem('spewzik_room_id', roomId);
-	localStorage.setItem('spewzik_room_name', roomName);
 	$('var#roomId').attr('data-val', roomId);
 	$('div#front').hide();
 	$('#title').text(roomName);
@@ -47,8 +45,6 @@ function joinRoom(roomId, roomName) {
 
 function leaveRoom(roomId) {
 	stopPlayer();
-    localStorage.removeItem('spewzik_room_id');
-	localStorage.removeItem('spewzik_room_name');
 	socket.emit('leave', roomId);
 	$('#title').text('Communities');
 	$('div#room').hide();
