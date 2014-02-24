@@ -11,11 +11,17 @@ function RoomPage(ytplayer) {
 	function loadTrack(track) {
 		$('#currentTrackName').text(track.name);
 		$('var#skipCount').text(0);
+		$('var#rating').attr('data-trackId', track._id);
+		$('var#rating').text(track.rating);
+		$('#controls').find('.vote').attr('data-trackid', track._id);
 	}
 	
 	function clearTrack() {
 		$('#currentTrackName').text('Nothing');
 		$('var#skipCount').text(0);
+		$('var#rating').removeAttr('data-trackId');
+		$('var#rating').text(0);
+		$('#controls').find('.vote').removeAttr('data-trackid');
 	}
 	
 	this.getRoomId = function() {
@@ -56,7 +62,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.updateListeners = function(listenerCount) {
-		$('var#mainListenerCount').text(listenerCount);
+		$('var#listenerCount').text(listenerCount);
 	}
 	
 	this.updateSkips = function(skipCount) {
@@ -147,8 +153,10 @@ function onYouTubePlayerReady() {
 
 	$(document).on('click', '.vote', function() {
 	  var trackId = $(this).attr('data-trackid');
-	  var val = $(this).attr('data-val');
-		connection.vote(trackId, val);
+		if (trackId) {
+		  var val = $(this).attr('data-val');
+			connection.vote(trackId, val);
+		}
 	});
 
 	$(document).on('click', '#skip', function() {

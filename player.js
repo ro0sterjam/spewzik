@@ -42,6 +42,7 @@ function Room(roomId) {
 	
 	var nextTrackTimer = null;
 	var trackStartTime = null;
+	var currentTrackId = null;
 	
 	this.getId = function() {
 		return roomId;
@@ -72,6 +73,7 @@ function Room(roomId) {
 		console.log('playing in room ' + roomId + ': ' + track.name);
 		track.pos = 0;
 		this.emitToAllInRoom('play', track);
+		currentTrackId = track._id;
 		
 		trackStartTime = process.hrtime();
 		var room = this;
@@ -87,7 +89,8 @@ function Room(roomId) {
 			clearTimeout(nextTrackTimer);
 			nextTrackTimer = null;
 			trackStartTime = null;
-			this.resetForNewTrack(roomId);
+			this.resetForNewTrack(currentTrackId);
+			currentTrackId = null;
 		}
 		var room = this;
 		dbaccess.playNext(roomId, skipped, function(err, track) {
@@ -106,10 +109,13 @@ function Room(roomId) {
 		return app.io.of('/room').clients(roomId);
 	}
 	
-	this.resetForNewTrack = function() {
+	this.resetForNewTrack = function(oldTrackId) {
 		var listeners = this.getListeners();
 		for (var i in listeners) {
 			listeners[i].set('skip', false);
+			var votes = listeners[i].store.data['votes'];
+			delete(votes[oldTrackId]);
+			listeners[i].set('votes', votes);
 		}
 	}
 	
@@ -312,6 +318,11 @@ exports.connectRoom = function(client) {
 	});
 	
 	client.on('vote', function(trackId, val) {
+		// only allow to vote once per track
+		var votes = client.store.data['votes'];
+		if (votes && votes[trackId]) {
+			return;
+		}
 		getClientRoom(client, function(err, room) {
 			if (err) {
 				client.emit('error', err.message);
@@ -326,6 +337,9 @@ exports.connectRoom = function(client) {
 					if (err) {
 						client.emit('error', err.message);
 					} else {	
+						votes = votes || {};
+						votes[trackId] = rate;
+						client.set('votes', votes);
 						room.emitToAllInRoom('trackUpdate', track);
 					}
 				});
