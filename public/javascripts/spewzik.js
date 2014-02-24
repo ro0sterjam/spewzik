@@ -1,189 +1,81 @@
-var socket;
-
 String.prototype.replaceAll = function (find, replace) {
     var str = this;
     return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
 };
 
-function addRoomDetails(room) {
-	var roomLinkHtml = $('div#roomLinkHtml').html();
-	roomLinkHtml = roomLinkHtml.replaceAll('{roomId}', room._id);
-	roomLinkHtml = roomLinkHtml.replaceAll('{roomName}', room.name);
-	roomLinkHtml = roomLinkHtml.replaceAll('{roomListeners}', room.listeners);
-	$('div#rooms').append(roomLinkHtml);
-}
-
-function addTrackDetails(track) {
-	console.log('adding track');
-	var trackHtml = $('div#trackHtml').html();
-	trackHtml = trackHtml.replaceAll('{trackId}', track._id);
-	trackHtml = trackHtml.replaceAll('{trackName}', track.name);
-	trackHtml = trackHtml.replaceAll('{trackRating}', track.rating);
-	$('div#tracks').append(trackHtml);
-}
-
-function createRoom(roomName) {
-	socket.emit('room', roomName);
-}
-
-function resetRoom() {
-	$('var#mainListenersCount').removeAttr('data-roomid');
-	$('var#mainListenersCount').text(0);
-	$('var#skipsCount').text(0);
-	$('#error').text('');
-	clearTracksDetails();
-}
-
-function joinRoom(roomId, roomName) {
-	$('var#roomId').attr('data-val', roomId);
-	$('div#front').hide();
-	$('#title').text(roomName);
-	$('var#mainListenersCount').attr('data-roomid', roomId);
-	$('div#room').show();
-	$('#back').show();
-}
-
-function leaveRoom(roomId) {
-	stopPlayer();
-	socket.emit('leave', roomId);
-	$('#title').text('Communities');
-	$('div#room').hide();
-	$('#back').hide();
-	$('div#front').show();
-	resetRoom();
-}
-
-function clearTracksDetails() {
-	var roomDiv = $('div#tracks')[0];
-	while (roomDiv.firstChild) {
-		roomDiv.removeChild(roomDiv.firstChild);
+function FrontPage() {
+	if (!(this instanceof arguments.callee)) {
+		return new FrontPage();
 	}
-}
-
-function onYouTubePlayerReady(playerApiId) {
-	var roomId = $('var#roomId').attr('data-val');
-	socket.emit('join', roomId);
-}
-
-function stopPlayer() {
-	var ytplayer = document.getElementById('ytplayer');
-	if (ytplayer.stopVideo) {
-		ytplayer.stopVideo();
+	
+	this.loadRooms = function(rooms) {
+		$('div#rooms').empty();
+		for (var i in rooms) {
+			this.addRoomToList(rooms[i]);
+		}
 	}
-	$('#currentTrackName').text('Nothing');
-}
-
-function loadPlayingDetails(track) {
-	$('#currentTrackName').text(track.name);
-}
-
-function popFromQueueDetails(track) {
-	var roomDiv = $('div#tracks')[0];
-	if (roomDiv.firstChild && $(roomDiv.firstChild).attr('data-trackid') === track._id) {
-		roomDiv.removeChild(roomDiv.firstChild);
-	} else {
-		console.log('playlist out of sync refetch');
-		var roomId = $('var#roomId').attr('data-val');
-		socket.emit('refetch', roomId);
+	
+	this.addRoomToList = function(room) {
+		console.log(room);
+		var roomLinkHtml = $('div#roomLinkHtml').html();
+		roomLinkHtml = roomLinkHtml.replaceAll('{roomId}', room._id);
+		roomLinkHtml = roomLinkHtml.replaceAll('{roomName}', room.name);
+		roomLinkHtml = roomLinkHtml.replaceAll('{roomListeners}', room.listenerCount);
+		$('div#rooms').append(roomLinkHtml);
 	}
-}
-
-function loadQueueDetails(playlist) {
-	clearTracksDetails();
-	for (var i = 0; i < playlist.length; i++) {
-		addTrackDetails(playlist[i]);
+	
+	this.updateListeners = function(roomId, listenerCount) {
+		$($("var.listenerCount[data-roomid='" + roomId + "']")).text(listenerCount);
 	}
-}
-
-$(document).ready(function(){
-  socket = io.connect();
-
-	socket.on('error', function(message) {
+	
+	this.setError = function(message) {
 		$('#error').text(message);
-	});
+	}
+	
+	this.clearError = function() {
+		$('#error').text('');
+	}
+}
+
+function ServerConnection(frontPage) {
+	if (!(this instanceof arguments.callee)) {
+		return new ServerConnection(frontPage);
+	}
+	
+	console.log('connecting');
+	var socket = io.connect('/front');
+	
+	this.createRoom = function(roomName) {
+		socket.emit('room', roomName);
+	}
 
 	socket.on('room', function(room) {
-		addRoomDetails(room);
+		frontPage.addRoomToList(room);
 	});
 
 	socket.on('rooms', function(rooms) {
-		for (var i in rooms) {
-			addRoomDetails(rooms[i]);
-		}
-	});
-
-	socket.on('listeners', function(data) {
-		$($("var.listenersCount[data-roomid='" + data.roomId + "']")).text(data.listeners);
+		frontPage.loadRooms(rooms);
 	});
 	
-	socket.on('playlist', function(playlist) {
-		loadQueueDetails(playlist);
-		var roomId = $('var#roomId').attr('data-val');
-		socket.emit('ready', roomId);
-	});
-
-	socket.on('play', function(track) {
-		var ytplayer = document.getElementById('ytplayer');
-		ytplayer.loadVideoById(track.eid, track.pos);
-		loadPlayingDetails(track);
-		$('var#skipsCount').text(0);
-		popFromQueueDetails(track);
+	socket.on('error', function(message) {
+		currentPage.setError(message);
 	});
 	
-	socket.on('stop', function() {
-		stopPlayer();
-		$('var#skipsCount').text(0);
+	socket.on('listenerCount', function(roomId, listenerCount) {
+		frontPage.updateListeners(roomId, listenerCount);
+	});
+}
+
+$(document).ready(function(){
+	var frontPage = new FrontPage();
+  var connection = new ServerConnection(frontPage);
+
+	$(document).on('click', '#addRoom', function() {
+		connection.createRoom($("input#roomName").val());
+		$("input#roomName").val('');
 	});
 
-	socket.on('track', function(track) {
-		addTrackDetails(track);
+	$(document).on('click', '#openAdd', function() {
+	  $('#addWrapper').css({ height: $('#addContainer').height() });
 	});
-	
-	socket.on('trackUpdate', function(track) {
-		$($("var.rating[data-trackid='" + track._id + "']")).text(track.rating);
-	});
-	
-	socket.on('skips', function(data) {
-		$('var#skipsCount').text(data.skips);
-	});
-
-});
-
-$(document).on('click', '#addRoom', function() {
-  createRoom($("input#roomName").val());
-	$("input#roomName").val('');
-});
-
-$(document).on('click', '#openAdd', function() {
-  $('#addWrapper').css({ height: $('#addContainer').height() });
-});
-
-$(document).on('click', '.roomLink', function() {
-	var roomId = $(this).attr('data-roomid');
-	var roomName = $(this).attr('data-roomname');
-	joinRoom(roomId, roomName);
-});
-
-$(document).on('click', '#back', function() {
-	var roomId = $('var#roomId').attr('data-val');
-	leaveRoom(roomId);
-});
-
-$(document).on('click', '.vote', function() {
-  var trackId = $(this).attr('data-trackid');
-  var val = $(this).attr('data-val');
-  var roomId = $('var#roomId').attr('data-val');
-  socket.emit('vote', { roomId: roomId, trackId: trackId, val: val });
-});
-
-$(document).on('click', '#skip', function() {
-  var roomId = $('var#roomId').attr('data-val');
-  socket.emit('skip', roomId);
-});
-
-$(document).on('click', '#addTrack', function() {
-  var trackEid = $('input#trackExtId').val();
-  $('input#trackExtId').val('');
-  var roomId = $('var#roomId').attr('data-val');
-  socket.emit('track', { roomId: roomId, trackEid: trackEid });
 });

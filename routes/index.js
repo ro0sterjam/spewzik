@@ -1,11 +1,29 @@
 var player = require('../player');
+var dbaccess = require('../dbaccess');
 
 /**
- * Redirects the dbaccess page to the play page of the dbaccess room.
+ * Renders the index page.
  */
 exports.index = function(req, res) {	
 	res.render('index');
 };
+
+/**
+ * Renders the room page for the given room ID.
+ */
+exports.room = function(req, res) {
+	var roomId = req.params.room_id;
+
+	dbaccess.getRoom(roomId, function(err, room) {
+		if (err) {
+			res.send(500, { error: err.message });
+		} else if (room === null) {
+			res.send(404, { error: 'room not found' });
+		} else {
+			res.render('room', { roomId: room._id, roomName: room.name});
+		}
+	});
+}
 
 /**
  * Adds a track to the given room playlist either by track ID, url, or host + external ID.
@@ -29,8 +47,11 @@ exports.addTrackToPlaylist = function(req, res) {
 	}
 };
 
-exports.getRoomsDetails = function(req, res) {
-	player.getRoomsDetails(function(err, rooms) {
+/**
+ * Sends all the rooms.
+ */
+exports.getRooms = function(req, res) {
+	dbaccess.getRoomsDetails(function(err, rooms) {
 		if (err) {
 			res.send(500, { error: err.message });
 		} else {
@@ -40,29 +61,12 @@ exports.getRoomsDetails = function(req, res) {
 }
 
 /**
- * Serves the room with the given room ID to the response.
- */
-exports.getRoom = function(req, res) {
-	var roomId = req.params.room_id;
-
-	player.getRoom(roomId, function(err, room) {
-		if (err) {
-			res.send(500, { error: err.message });
-		} else if (room === null) {
-			res.send(404, { error: 'room not found' });
-		} else {
-			res.send(200, room);
-		}
-	});
-};
-
-/**
- * Serves the currently playing track.
+ * Sends the currently playing track for the given room ID.
  */
 exports.getCurrentTrack = function(req, res) {
 	var roomId = req.params.room_id;
 
-	player.getCurrentTrack(roomId, function(err, track) {
+	player.getCurrentlyPlaying(roomId, function(err, track) {
 		if (err) {
 			res.send(500, { error: err.message });
 		} else if (track === null) {

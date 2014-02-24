@@ -27,8 +27,8 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
-app.get('/rooms', routes.getRoomsDetails);
-app.get('/rooms/:room_id', routes.getRoom);
+app.get('/rooms/:room_id', routes.room);
+app.get('/rooms', routes.getRooms);
 app.get('/rooms/:room_id/current', routes.getCurrentTrack);
 app.post('/rooms/:room_id/tracks', routes.addTrackToPlaylist);
 
@@ -39,6 +39,7 @@ var server = http.createServer(app).listen(app.get('port'), function(){
 var io = require('socket.io').listen(server);
 player.startPlayingAllRooms();
 
-io.sockets.on('connection', player.connectSocket);
+io.of('/front').on('connection', player.connectIndex);
+io.of('/room').on('connection', player.connectRoom);
 
 exports.io = io;

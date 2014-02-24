@@ -21,44 +21,16 @@ html
       h1#title Communities
       
     div#content
-    
-      div#front
-        div#rooms
-          div#roomLinkHtml(style='display: none;')
-            a.roomLink(href='#', data-roomid='{roomId}', data-roomname='{roomName}')
-              | {roomName} - 
-              var.listenersCount(data-roomid='{roomId}') {roomListeners}
-              |  listeners
-            br
-        div#addWrapper
-          div#addContainer
-            input#roomName(type='text', placeholder='Room Name')
-            button#addRoom New Room
-        div#openAdd.button Add Room
-      
-      div#room(style='display: none;')
-        var#roomId
-        h3 Currently playing : 
-          var#currentTrackName Nothing
-        object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3')
-          param(name='allowScriptAccess', value='always')
-          param(name='allowFullScreen', value='false')
-        div#controls
-          p
-            var#mainListenersCount.listenersCount 0
-            |  listeners; 
-            var#skipsCount 0
-            |  skips
-          button#skip Skip
-        div#tracks
-        div#trackHtml(style='display: none;')
-          div.track(data-trackid='{trackId}')
-            p {trackName}
-            p Rating: 
-              var.rating(data-trackid='{trackId}') {trackRating}
-            button.vote(data-trackid='{trackId}', data-val='up') Up  
-            button.vote(data-trackid='{trackId}', data-val='down') Down              
-        div
-          input#trackExtId(type='text', placeholder='Youtube ID')
-          button#addTrack Add Track
-        var#error
+      div#rooms
+      div#roomLinkHtml(style='display: none;')
+        a.roomLink(href='/rooms/{roomId}', data-roomid='{roomId}', data-roomname='{roomName}')
+          | {roomName} - 
+          var.listenerCount(data-roomid='{roomId}') {roomListeners}
+          |  listeners
+          br
+      div#addWrapper
+        div#addContainer
+          input#roomName(type='text', placeholder='Room Name')
+          button#addRoom New Room
+      div#openAdd.button Add Room
+      var#error
