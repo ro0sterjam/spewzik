@@ -88,7 +88,10 @@ function ServerConnection(roomId, roomPage) {
 	}
 	
 	var socket = io.connect('/room');
-	socket.emit('join', roomId);
+	
+	socket.on('connect', function() {
+		socket.emit('join', roomId);
+	});
 	
 	this.vote = function(trackId, val) {
 		socket.emit('vote', trackId, val);
