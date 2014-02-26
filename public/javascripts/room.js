@@ -27,7 +27,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.isPlaying = function() {
-		return !!this.getCurrentTrack();
+		return !!this.getCurrentTrackId();
 	}
 	
 	this.getCurrentTrackId = function() {
@@ -51,6 +51,10 @@ function RoomPage(ytplayer) {
 	this.playTrack = function(track) {
 		loadTrack(track);
 		ytplayer.loadVideoById(track.eid, track.pos);
+	}
+	
+	this.seekTo = function(pos) {
+		ytplayer.seekTo(pos);
 	}
 	
 	this.stopTrack = function() {
@@ -131,7 +135,7 @@ function ServerConnection(roomId, roomPage) {
 
 	socket.on('play', function(track) {
 		if (track._id === roomPage.getCurrentTrackId()) {
-			roomPage.playTrack(track);
+			roomPage.seekTo(track.pos);
 		} else if (track._id === roomPage.popTrackIdFromQueue()) {
 			roomPage.playTrack(track);
 		} else {
@@ -198,4 +202,17 @@ function onYouTubePlayerReady() {
 		connection.addTrack(track);
 	  $('input#trackExtId').val('');
 	});
+	
+	ytplayer.addEventListener('onStateChange', 'onYouTubeStateChange');
+
+
+	this.onYouTubeStateChange = function onYouTubeStateChange(newState) {
+		var PLAYING = 1;
+		var PAUSED = 2;
+		var BUFFERING = 3;
+		if (roomPage.isPlaying() && [PAUSED, BUFFERING].indexOf(onYouTubeStateChange.oldState) > -1 && newState === PLAYING) {
+			connection.sendReady();
+		}
+		onYouTubeStateChange.oldState = newState;
+	}
 }
