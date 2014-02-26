@@ -239,9 +239,11 @@ function onYouTubePlayerReady() {
 	$(document).on('click', '#save', function() {
 		if (roomPage.isPlaying()) {
 			console.log('saving track to local storage');
-			var savedTracks = JSON.parse(localStorage.getItem('savedTracks')) || [];
-			savedTracks.push({ id: roomPage.getCurrentTrackId(), name: roomPage.getCurrentTrackName() });
-			localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+			var savedTracks = JSON.parse(localStorage.getItem('savedTracks')) || {};
+			if (!savedTracks[roomPage.getCurrentTrackId()]) {
+				savedTracks[roomPage.getCurrentTrackId()] = roomPage.getCurrentTrackName();
+				localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+			}
 		}
 	});
 	
