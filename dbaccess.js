@@ -6,6 +6,8 @@ var request = require('request');
 var monk = require('monk');
 var mongodb = require('mongodb');
 
+var MAX_TRACK_LENGTH = 15 * 60;
+
 // Check if mongodb url is defined, if not use localhost
 if (typeof(process.env.MONGOHQ_URL) == 'undefined') {
 	process.env.MONGOHQ_URL = 'localhost:27017/spewzik';
@@ -91,6 +93,8 @@ function addTrackToTracks(host, eid, callback) {
 					xml2js.parseString(body, function (err, result) {
 						if (err) {
 							callback(err);
+						} else if (parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds) > MAX_TRACK_LENGTH) {
+							callback(new Error('Max video length allowed: ' + MAX_TRACK_LENGTH + ' seconds'));
 						} else {
 							var track = {
 								name: result.entry.title[0],
