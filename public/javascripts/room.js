@@ -237,10 +237,12 @@ function onYouTubePlayerReady() {
 	});
 	
 	$(document).on('click', '#save', function() {
-		console.log('saving track to local storage');
-		var savedTracks = JSON.parse(localStorage.getItem('savedTracks')) || [];
-		savedTracks.push({ id: roomPage.getCurrentTrackId(), name: roomPage.getCurrentTrackName() });
-		localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+		if (roomPage.isPlaying()) {
+			console.log('saving track to local storage');
+			var savedTracks = JSON.parse(localStorage.getItem('savedTracks')) || [];
+			savedTracks.push({ id: roomPage.getCurrentTrackId(), name: roomPage.getCurrentTrackName() });
+			localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+		}
 	});
 	
 	$(document).on('click', '#changeName', function() {
