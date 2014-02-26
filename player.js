@@ -208,13 +208,14 @@ function Room(roomId) {
 		emitToAllInRoom('listenerCount', listenerCount);
 	}
 	
-	function addTrackToQueue(host, eid, callback) {
+	function addTrackToQueue(host, eid, addedBy, callback) {
 		var wasPlaying = isPlaying();
 		console.log('adding track { host: ' + host + ', eid: ' + eid + ' }' + ' to room ' + roomId);
 		dbaccess.addExternalTrackToPlaylist(host, eid, roomId, function(err, track) {
 			if (err) {
 				callback(err);
 			} else {
+				track.addedBy = addedBy;
 				emitToAllInRoom('track', track);
 				if (!wasPlaying) {
 					startPlaying();
@@ -293,7 +294,7 @@ function addTrackToPlaylist(roomId, host, eid, callback) {
 	if (room === null) {
 		callback(new Error('Room with id ' + roomId + ' does not exist'));
 	} else {
-		room.addTrackToQueue(host, eid, callback);
+		room.addTrackToQueue(host, eid, null, callback);
 	}
 }
 
@@ -397,7 +398,7 @@ function connectRoom(socket) {
 					if (err) {
 						socket.emit('error', err.message);
 					} else {
-						room.addTrackToQueue(host, eid, function(err, track) {
+						room.addTrackToQueue(host, eid, track.nickname, function(err, track) {
 							if (err) {
 								socket.emit('error', err.message);
 							}
@@ -405,7 +406,7 @@ function connectRoom(socket) {
 					}
 				});
 			} else {
-				room.addTrackToQueue(track.host, track.eid, function(err, track) {
+				room.addTrackToQueue(track.host, track.eid, track.nickname, function(err, track) {
 					if (err) {
 						socket.emit('error', err.message);
 					}

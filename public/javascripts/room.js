@@ -59,6 +59,10 @@ function RoomPage(ytplayer) {
 		return $('#currentTrack').attr('data-trackid') || null;
 	}
 	
+	this.getCurrentTrackName = function() {
+		return $('#currentTrack').text();
+	}
+	
 	this.getRoomId = function() {
 		return $('var#roomId').attr('data-roomid');
 	}
@@ -217,16 +221,31 @@ function onYouTubePlayerReady() {
 		var text = $('input#trackExtId').val();
 		if (text.length > 25) {
 			var track = {
-				url: text
+				url: text,
+				nickname: localStorage.getItem('nickname')
 			}
 		} else {
 			var track = {
 				host: 'youtube',
-				eid: text
+				eid: text,
+				nickname: localStorage.getItem('nickname')
 			}
 		}
+		
 		connection.addTrack(track);
 	  $('input#trackExtId').val('');
+	});
+	
+	$(document).on('click', '#save', function() {
+		console.log('saving track to local storage');
+		var savedTracks = JSON.parse(localStorage.getItem('savedTracks')) || [];
+		savedTracks.push({ id: roomPage.getCurrentTrackId(), name: roomPage.getCurrentTrackName() });
+		localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+	});
+	
+	$(document).on('click', '#changeName', function() {
+		localStorage.setItem('nickname', $('input#nickname').val());
+	  $('input#nickname').val('');
 	});
 	
 	ytplayer.addEventListener('onStateChange', 'onYouTubeStateChange');

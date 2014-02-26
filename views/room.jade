@@ -32,6 +32,7 @@ html
         param(name='allowFullScreen', value='false')
       div#controls
         button#skip Skip
+        button#save Save
         var#time 0:00
         |  / 
         var#totalTime 0:00
@@ -51,4 +52,7 @@ html
       div
         input#trackExtId(type='text', placeholder='Youtube URL')
         button#addTrack Add Track
+      div(style='display: none;')
+        input#nickname(type='text', placeholder='Nickname')
+        button#changeName Change Name
       var#error
