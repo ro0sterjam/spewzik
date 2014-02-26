@@ -18,7 +18,7 @@ exports.room = function(req, res) {
 		if (err) {
 			res.send(500, { error: err.message });
 		} else if (room === null) {
-			res.send(404, { error: 'room not found' });
+			res.send(404, { error: 'Room not found' });
 		} else {
 			res.render('room', { roomId: room._id, roomName: room.name});
 		}
@@ -36,14 +36,12 @@ exports.addTrackToPlaylist = function(req, res) {
 		player.addTrackToPlaylist(roomId, query.host, query.eid, function(err, track) {
 			if (err) {
 				res.send(500, { error: err.message });
-			} else if (track === null) {
-				res.send(409, { error: 'Track already queued in playlist'});
 			} else {
 				res.send(200, track);
 			}
 		});
 	} else {
-		res.send(400, { error: 'malformed query' });
+		res.send(400, { error: 'Malformed query' });
 	}
 };
 
@@ -70,7 +68,7 @@ exports.getCurrentTrack = function(req, res) {
 		if (err) {
 			res.send(500, { error: err.message });
 		} else if (track === null) {
-			res.send(404, { error: 'no track currently playing' });
+			res.send(404, { error: 'No track currently playing' });
 		} else {
 			res.send(200, track);
 		}

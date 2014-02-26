@@ -79,32 +79,36 @@ function addTrackToTracksByUrl(urlStr, callback) {
  */
 function addTrackToTracks(host, eid, callback) {
 	if (host === 'youtube') {
-		request('https://gdata.youtube.com/feeds/api/videos/' + eid + '?v=2', function(err, res, body) {
-			if (err) {
-				callback(err);
-			} else if (res.statusCode !== 200) {
-				callback(new Error('video not found'));
-			} else {
-				xml2js.parseString(body, function (err, result) {
-					if (err) {
-						callback(err);
-					} else {
-						var track = {
-							name: result.entry.title[0],
-							duration: parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds),
-							rating: 0,
-							playCount: 0,
-							added: Date(),
-							host: host,
-							eid: eid
+		if (eid.trim().length === 0) {
+			callback(new Error('Eid field blank'));
+		} else {
+			request('https://gdata.youtube.com/feeds/api/videos/' + eid + '?v=2', function(err, res, body) {
+				if (err) {
+					callback(err);
+				} else if (res.statusCode !== 200) {
+					callback(new Error('Video not found'));
+				} else {
+					xml2js.parseString(body, function (err, result) {
+						if (err) {
+							callback(err);
+						} else {
+							var track = {
+								name: result.entry.title[0],
+								duration: parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds),
+								rating: 0,
+								playCount: 0,
+								added: Date(),
+								host: host,
+								eid: eid
+							}
+							db.get('tracks').insert(track, callback);
 						}
-						db.get('tracks').insert(track, callback);
-					}
-				});
-			}
-		});
+					});
+				}
+			});
+		}
 	} else {
-		callback(new Error('unsupported host'));
+		callback(new Error('Unsupported host'));
 	}
 }
 
@@ -123,32 +127,41 @@ function addTrackToPlaylist(roomId, track, callback) {
 	track.playCount = 0;
 	track.timesSkipped = 0;
 	
-	// If track not in room, add to room tracks
-	db.get('rooms').update(
-		{ _id: roomId, 'tracks._id': { $ne: track._id } }, 
-		{ $push: { tracks: track } }, 
-		function(err, count) {
-			if (err) {
-				callback(err);
-			} else {
-				// Add track to playlist
-				delete(track.playCount);
-				delete(track.timesSkipped);
-				db.get('rooms').findAndModify(
-					{ _id: roomId, 'playlist._id': { $ne: track._id } },
-					{ $push: { playlist: track } },
-					function(err, room) {
-						if (err) {
-							callback(err);
-						} else if (room === null) {
-							callback(null, null);
-						} else {
-							callback(null, track);
-						}
+	// Check that room exists
+	getRoom(roomId, function(err, room) {
+		if (err) {
+			callback(err);
+		} else if (room === null) {
+			callback(new Error('Room with id ' + roomId + 'does not exist'));
+		} else {
+			// Add track to tracks list
+			db.get('rooms').update(
+				{ _id: roomId, 'tracks._id': { $ne: track._id } }, 
+				{ $push: { tracks: track } }, 
+				function(err, count) {
+					if (err) {
+						callback(err);
+					} else {
+						// Add track to playlist
+						delete(track.playCount);
+						delete(track.timesSkipped);
+						db.get('rooms').findAndModify(
+							{ _id: roomId, 'playlist._id': { $ne: track._id } },
+							{ $push: { playlist: track } },
+							function(err, room) {
+								if (err) {
+									callback(err);
+								} else if (room === null) {
+									callback(new Error('Track already in playlist'));
+								} else {
+									callback(null, track);
+								}
+							}
+						);
 					}
-				);
-			}
-		});
+				});
+		}
+	});
 }
 
 /**
@@ -285,7 +298,7 @@ function getRooms(callback) {
  * @param callback Callback with the params (err, rooms)
  */
 function getRoomsDetails(callback) {
-	db.get('rooms').find({}, ['-history', '-playlist', '-tracks'], callback);
+	db.get('rooms').find({}, ['-history', '-tracks'], callback);
 }
 
 /**
@@ -326,6 +339,8 @@ function getCurrentTrack(roomId, callback) {
 	getPlaylist(roomId, function(err, playlist) {
 		if (err) {
 			callback(err);
+		} else if (playlist === null) {
+			callback(new Error('Room with id ' + roomId + ' does not exist'));
 		} else {
 			callback(null, playlist[0] || null);
 		}

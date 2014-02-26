@@ -21,9 +21,14 @@ html
       div#rooms
       div#roomLinkHtml(style='display: none;')
         a.roomLink(href='/rooms/{roomId}', data-roomid='{roomId}', data-roomname='{roomName}')
-          | {roomName} - 
-          var.listenerCount(data-roomid='{roomId}') {roomListeners}
-          |  listeners
+          b {roomName}
+          |  - 
+          font(color='red')
+            var.listenerCount(data-roomid='{roomId}') {roomListeners}
+            |  listeners
+          font(color='blue')
+            |  - Playing:  
+            i.currentTrack(data-roomid='{roomId}') {currentTrack}
           br
       div#addWrapper
         div#addContainer

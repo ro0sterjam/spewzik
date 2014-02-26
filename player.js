@@ -1,171 +1,230 @@
 var dbaccess = require('./dbaccess');
 var app = require('./app');
+var url = require('url');
+var querystring = require('querystring');
 
 var NEXT_TRACK_DELAY = 5;
 var RATIO_TO_SKIP = 0.6;
 
-(function() {
-	var rooms = {};
+exports.startPlayingAllRooms = startPlayingAllRooms;
+exports.addTrackToPlaylist = addTrackToPlaylist;
+exports.getCurrentlyPlaying = getCurrentlyPlaying;
+exports.connectIndex = connectIndex;
+exports.connectRoom = connectRoom;
+
+Room.rooms = {};
+Room.create = function(roomId) {
+	return Room.rooms[roomId] = new Room(roomId);
+}
+Room.get = function(roomId) {
+	console.log('getting room for room with id ' + roomId);
+	return Room.rooms[roomId] || null;
+}
+
+function Client(socket) {
+	if (!(this instanceof arguments.callee)) {
+		return new Client(socket);
+	}
+	console.log('creating client with for socket id ' + socket.id);
 	
-	this.getClientRoom = function(client, callback) {
-		var roomId = client.store.data['roomId'];
-		if (!roomId) {
-			callback(new Error('not in a room'));
-		} else {
-			getRoom(roomId, callback);
+	this.vote = vote;
+	this.hasVoted = hasVoted;
+	this.removeVote = removeVote;
+	this.skip = skip;
+	this.hasSkipped = hasSkipped;
+	this.resetSkipped = resetSkipped;
+	this.joinRoom = joinRoom;
+	this.leaveRoom = leaveRoom;
+	this.getRoom = getRoom;
+	
+	var roomId = null;
+	var skipped = false;
+	var votes = {};
+	
+	function vote(trackId, rating) {
+		console.log('socket ' + socket.id + ' voting for track with id ' + trackId);
+		votes[trackId] = rating;
+	}
+	
+	function hasVoted(trackId) {
+		return !!votes[trackId];
+	}
+	
+	function hasSkipped() {
+		return skipped;
+	}
+	
+	function skip() {
+		console.log('socket ' + socket.id + ' skipped track');
+		skipped = true;
+	}
+	
+	function removeVote(trackId) {
+		delete votes[trackId];
+	}
+	
+	function resetSkipped() {
+		skipped = false;
+	}
+	
+	function joinRoom(newRoomId) {
+		if (!!roomId) {
+			leaveRoom();
+		}
+		console.log('socket ' + socket.id + ' joining room ' + newRoomId);
+		socket.join(newRoomId);
+		roomId = newRoomId;
+	}
+	
+	function leaveRoom() {
+		if (roomId) {
+			console.log('socket ' + socket.id + ' leaving room ' + roomId);
+			socket.leave(roomId);
+			roomId = null;
 		}
 	}
 	
-	this.createRoom = function(roomId) {
-		rooms[roomId] = new Room(roomId);
-		return rooms[roomId];
+	function getRoom() {
+		return Room.get(roomId) || null;
 	}
-	
-	this.getRoom = function(roomId, callback) {
-		var room = rooms[roomId];
-		if (!room) {
-			callback(new Error('room does not exist'));
-		} else {
-			callback(null, room);
-		}
-	}
-	
-	this.getRooms = function() {
-		return rooms;
-	}
-})();
+}
 
 function Room(roomId) {
 	if (!(this instanceof arguments.callee)) {
 		return new Room(roomId);
 	}
 	
+	this.roomId = roomId;
+	
+	this.getRoomData = getRoomData;
+	this.addTrackToQueue = addTrackToQueue;
+	this.getCurrentlyPlaying = getCurrentlyPlaying;
+	this.getListeners = getListeners;
+	this.emitListenerCount = emitListenerCount;
+	this.startPlaying = startPlaying;
+	this.emitToAllInRoom = emitToAllInRoom;
+	this.isPlaying = isPlaying;
+	this.onSkip = onSkip;
+	
 	var nextTrackTimer = null;
 	var trackStartTime = null;
 	var currentTrackId = null;
 	
-	this.getId = function() {
-		return roomId;
-	}
-	
-	this.isPlaying = function() {
+	function isPlaying() {
 		return trackStartTime !== null;
 	}
 	
-	this.emitToAllInRoom = function(eventName, data) {
+	function emitToAllInRoom(eventName, data) {
 		app.io.of('/room').in(roomId).emit(eventName, data);
 	}
 	
-	this.startPlaying = function() {
-		var room = this;
+	function startPlaying() {
 		dbaccess.getCurrentTrack(roomId, function(err, track) {
 			if (err) {
-				room.emitToAllInRoom('error', err.message);
+				emitToAllInRoom('error', err.message);
 			} else if (track === null) {
 				console.log('playing in room ' + roomId + ': NOTHING');
 			} else {
-				room.playTrack(track);
+				playTrack(track);
 			}
 		});
 	}
 	
-	this.playTrack = function(track) {
+	function playTrack(track) {
 		console.log('playing in room ' + roomId + ': ' + track.name);
 		track.pos = 0;
-		this.emitToAllInRoom('play', track);
-		currentTrackId = track._id;
+		emitToAllInRoom('play', track);
+		app.io.of('/front').emit('newTrack', roomId, track);
 		
+		currentTrackId = track._id;
 		trackStartTime = process.hrtime();
-		var room = this;
+		var nextTrackTime = (track.duration + NEXT_TRACK_DELAY) * 1000;
 		nextTrackTimer = setTimeout(function() {
 			trackStartTime = null;
 			nextTrackTimer = null;
-			room.playNext(false);
-		}, (track.duration + NEXT_TRACK_DELAY) * 1000);
+			currentTrackId = null;
+			playNext(false);
+		}, nextTrackTime);
+		console.log('next track in room ' + roomId + ' will play in ' + nextTrackTime + 'ms');
 	}
 	
-	this.playNext = function(skipped) {
+	function playNext(skipped) {
+		resetForNewTrack();
 		if (nextTrackTimer !== null) {
 			clearTimeout(nextTrackTimer);
 			nextTrackTimer = null;
 			trackStartTime = null;
-			this.resetForNewTrack(currentTrackId);
 			currentTrackId = null;
 		}
-		var room = this;
 		dbaccess.playNext(roomId, skipped, function(err, track) {
 			if (err) {
-				room.emitToAllInRoom('error', err.message);
+				emitToAllInRoom('error', err.message);
 			} else if (track === null) {
 				console.log('nothing left to play in room ' + roomId);
-				room.emitToAllInRoom('stop');
+				emitToAllInRoom('stop');
+				app.io.of('/front').emit('newTrack', roomId, null);
 			} else {
-				room.playTrack(track);
+				playTrack(track);
 			}
 		});
 	}
 	
-	this.getListeners = function() {
-		return app.io.of('/room').clients(roomId);
+	function getListeners() {
+		return app.io.of('/room').clients(roomId).map(function(client) {
+			return client.store.data['client'];
+		});
 	}
 	
-	this.resetForNewTrack = function(oldTrackId) {
-		var listeners = this.getListeners();
-		for (var i in listeners) {
-			listeners[i].set('skip', false);
-			var votes = listeners[i].store.data['votes'];
-			delete(votes[oldTrackId]);
-			listeners[i].set('votes', votes);
-		}
+	function resetForNewTrack() {
+		console.log('resetting client data in room ' + roomId);
+		getListeners().forEach(function(listener) {
+			listener.removeVote(currentTrackId);
+			listener.resetSkipped();
+		});
 	}
 	
-	this.getSkipCount = function() {
-		var listeners = this.getListeners();
-		var skipCount = 0;
-		for (var i in listeners) {
-			if (listeners[i].store.data['skip']) {
-				skipCount++;
-			}
-		}
-		return skipCount;
+	function getSkipCount() {
+		return getListeners().map(function(listener) {
+			return listener.hasSkipped();
+		}).concat([0]).reduce(function(a, b) {
+			return a + b;
+		});
 	}
 	
-	this.shouldSkip = function() {
-		return (this.getSkipCount() * 1.0 / this.getListeners().length >= RATIO_TO_SKIP);
-	}
-	
-	this.onSkip = function() {
-		if (this.shouldSkip()) {
-			this.playNext(true);
+	function onSkip() {
+		if (getSkipCount() * 1.0 / getListeners().length >= RATIO_TO_SKIP) {
+			console.log('skipping track in room ' + roomId);
+			playNext(true);
 		} else {
-			this.emitToAllInRoom('skipCount', this.getSkipCount());
+			console.log('sending skip count to clients in room ' + roomId);
+			emitToAllInRoom('skipCount', getSkipCount());
 		}
 	}
 	
-	this.emitListenerCount = function() {
-		var listenerCount = this.getListeners().length;
+	function emitListenerCount() {
+		var listenerCount = getListeners().length;
 		app.io.of('/front').emit('listenerCount', roomId, listenerCount);
-		this.emitToAllInRoom('listenerCount', listenerCount);
+		console.log('sending listener count to clients in room ' + roomId);
+		emitToAllInRoom('listenerCount', listenerCount);
 	}
 	
-	this.addTrackToQueue = function(host, eid, callback) {
-		var wasPlaying = this.isPlaying();
-		var room = this;
+	function addTrackToQueue(host, eid, callback) {
+		var wasPlaying = isPlaying();
+		console.log('adding track { host: ' + host + ', eid: ' + eid + ' }' + ' to room ' + roomId);
 		dbaccess.addExternalTrackToPlaylist(host, eid, roomId, function(err, track) {
 			if (err) {
 				callback(err);
-				return;
-			} else if (track) {
-				room.emitToAllInRoom('track', track);
+			} else {
+				emitToAllInRoom('track', track);
 				if (!wasPlaying) {
-					room.startPlaying();
+					startPlaying();
 				}
+				callback(null, track);
 			}
-			callback(null, track);
 		});
 	}
 	
-	this.getCurrentlyPlaying = function(callback) {
+	function getCurrentlyPlaying(callback) {
 		dbaccess.getCurrentTrack(roomId, function(err, track) {
 			if (err) {
 				callback(err);
@@ -178,79 +237,93 @@ function Room(roomId) {
 		});
 	}
 	
-	this.getRoomData = function(callback) {
-		var room = this;
+	function getRoomData(callback) {
 		dbaccess.getRoom(roomId, function(err, roomData) {
 			if (err) {
 				callback(err);
 			} else if (roomData === null) {
-				callback(new Error('room not found'));
+				callback(new Error('Room not found'));
 			} else {
-				roomData.skipCount = room.getSkipCount();
-				roomData.listenerCount = room.getListeners().length;
+				roomData.skipCount = getSkipCount();
+				roomData.listenerCount = getListeners().length;
 				callback(null, roomData);
 			}
 		});
 	}
-	
-	this.emitRoomToClient = function(client) {
-		this.getRoomData(function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				client.emit('room', room);
-			}
-		});
+}
+
+function parseUrl(urlStr, callback) {
+	var urlObj = url.parse(urlStr);
+	if (urlObj.host === null) {
+		callback(new Error('host not found, please include protocol in url'));
+	} else if (urlObj.host.match('youtube')) {
+		var queryObj = querystring.parse(urlObj.query);
+		if (queryObj.v === null) {
+			callback(new Error('youtube query invalid, requires \'v\' field'));
+		} else {
+			callback(null, 'youtube', queryObj.v);
+		}
+	} else {
+		callback(new Error('unsupported host'), null, null);
 	}
 }
 
-exports.startPlayingAllRooms = function() {
-	dbaccess.getRoomsDetails(function(err, rooms) {
-		for (var i in rooms) {
-			var room = createRoom(rooms[i]._id)
-			room.startPlaying();
-		}
-	});
-};
-
-exports.addTrackToPlaylist = function(roomId, host, eid, callback) {
-	getRoom(roomId, function(err, room) {
+function emitRoomDataToSocket(room, socket) {
+	console.log('sending room ' + room._id + ' to client ' + socket.id);
+	room.getRoomData(function(err, roomData) {
 		if (err) {
-			callback(err);
+			socket.emit('error', err.message);
 		} else {
-			room.addTrackToQueue(host, eid, callback);
+			socket.emit('room', roomData);
 		}
 	});
 }
 
-exports.getCurrentlyPlaying = function(roomId, callback) {
-	getRoom(roomId, function(err, room) {
-		if (err) {
-			callback(err);
-		} else {
-			room.getCurrentlyPlaying(callback);
-		}
+function startPlayingAllRooms() {
+	console.log('commencing play in all rooms');
+	dbaccess.getRoomsDetails(function(err, rooms) {
+		rooms.forEach(function(roomData) {
+			Room.create(roomData._id).startPlaying();
+		});
 	});
 }
 
-exports.connectIndex = function(client) {
+function addTrackToPlaylist(roomId, host, eid, callback) {
+	var room = Room.get(roomId);
+	if (room === null) {
+		callback(new Error('Room with id ' + roomId + ' does not exist'));
+	} else {
+		room.addTrackToQueue(host, eid, callback);
+	}
+}
+
+function getCurrentlyPlaying(roomId, callback) {
+	var room = Room.get(roomId);
+	if (room === null) {
+		callback(new Error('Room with id ' + roomId + ' does not exist'));
+	} else {
+		room.getCurrentlyPlaying(callback);
+	}
+}
+
+function connectIndex(socket) {
 	dbaccess.getRoomsDetails(function(err, rooms) {
 		if (err) {
-			client.emit('error', err.message);
+			socket.emit('error', err.message);
 		} else if (rooms) {
 			for (var i in rooms) {
-				rooms[i].listenerCount = getRooms()[rooms[i]._id].getListeners().length;
+				rooms[i].listenerCount = Room.get(rooms[i]._id).getListeners().length;
 			}
-			client.emit('rooms', rooms);
+			socket.emit('rooms', rooms);
 		}
 	});
 	
-	client.on('room', function(name) {
+	socket.on('room', function(name) {
 		dbaccess.createRoom(name, function(err, room) {
 			if (err) {
-				client.emit('error', err.message);
+				socket.emit('error', err.message);
 			} else {
-				createRoom(room._id);
+				Room.create(room._id);
 				room.listenerCount = 0;
 				app.io.of('/front').emit('room', room);
 			}
@@ -258,121 +331,121 @@ exports.connectIndex = function(client) {
 	});
 }
 
-exports.connectRoom = function(client) {
+function connectRoom(socket) {
 	
-	client.on('join', function(roomId) {
-		getRoom(roomId, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				client.join(roomId);
-				client.set('roomId', roomId);
-				room.emitRoomToClient(client);
-				room.emitListenerCount();
-			}
-		});
+	var client = new Client(socket);
+	socket.set('client', client);
+	
+	socket.on('join', function(roomId) {
+		var room = Room.get(roomId);
+		if (!room) {
+			socket.emit('error', 'Room ' + roomId + ' does not exist');
+		} else {
+			client.joinRoom(roomId);
+			
+			emitRoomDataToSocket(room, socket);
+			room.emitListenerCount();
+		}
 	});
 	
-	client.on('refresh', function() {
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				room.emitRoomToClient(client);
-			}
-		});
+	socket.on('refresh', function() {
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			emitRoomDataToSocket(room, socket);
+		}
 	});
 	
-	client.on('ready', function() {
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else if (room.isPlaying()) {
-				room.getCurrentlyPlaying(function(err, track) {
-					if (err) {
-						client.emit('error', err.message);
-					} else if (track === null) {
-						client.emit('error', 'couldn\'t get current track');
-					} else {
-						client.emit('play', track);
-					}
-				});
-			}
-		});
+	socket.on('ready', function() {
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			room.getCurrentlyPlaying(function(err, track) {
+				if (err) {
+					socket.emit('error', err.message);
+				} else if (!!track) {
+					socket.emit('play', track);
+				}
+			});
+		}
 	});
 
-	client.on('track', function(track) {
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
+	socket.on('track', function(track) {
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			if (track.url) {
+				parseUrl(track.url, function(err, host, eid) {
+					if (err) {
+						socket.emit('error', err.message);
+					} else {
+						room.addTrackToQueue(host, eid, function(err, track) {
+							if (err) {
+								socket.emit('error', err.message);
+							}
+						});
+					}
+				});
 			} else {
 				room.addTrackToQueue(track.host, track.eid, function(err, track) {
 					if (err) {
-						client.emit('error', err.message);
-					} else if (!track) {
-						client.emit('error', 'track already in playlist');
+						socket.emit('error', err.message);
 					}
 				});
 			}
-		});
+		}
 	});
 	
-	client.on('vote', function(trackId, val) {
+	socket.on('vote', function(trackId, val) {
 		// only allow to vote once per track
-		var votes = client.store.data['votes'];
-		if (votes && votes[trackId]) {
+		if (client.hasVoted(trackId)) {
 			return;
 		}
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				if (val === 'up') {
-					var rate = 1;
-				} else if (val === 'down') {
-					var rate = -1;
-				}
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			if (val === 'up') {
+				var rate = 1;
+			} else if (val === 'down') {
+				var rate = -1;
+			}
 
-				dbaccess.addToTrackRating(room.getId(), trackId, rate, function(err, track) {
-					if (err) {
-						client.emit('error', err.message);
-					} else {	
-						votes = votes || {};
-						votes[trackId] = rate;
-						client.set('votes', votes);
-						room.emitToAllInRoom('trackUpdate', track);
-					}
-				});
-			}
-		});
-	});
-	
-	client.on('skip', function() {
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				if (room.isPlaying()) {
-					client.set('skip', true);
-					room.onSkip();
+			dbaccess.addToTrackRating(room.roomId, trackId, rate, function(err, track) {
+				if (err) {
+					socket.emit('error', err.message);
+				} else {
+					client.vote(trackId, rate);
+					room.emitToAllInRoom('trackUpdate', track);
 				}
-			}
-		});
+			});
+		}
 	});
 	
-	client.on('disconnect', function() {
-		getClientRoom(client, function(err, room) {
-			if (err) {
-				client.emit('error', err.message);
-			} else {
-				client.leave(room.getId());
-				client.set('skip', false);
-				room.emitListenerCount();
-				if (room.isPlaying()) {
-					room.onSkip();
-				}
+	socket.on('skip', function() {
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			if (room.isPlaying()) {
+				client.skip();
+				room.onSkip();
 			}
-		});
+		}
 	});
 	
+	socket.on('disconnect', function() {
+		var room = client.getRoom();
+		if (!!room) {
+			client.leaveRoom(room.roomId);
+			client.resetSkipped();
+			room.emitListenerCount();
+			if (room.isPlaying()) {
+				room.onSkip();
+			}
+		}
+	});
 }

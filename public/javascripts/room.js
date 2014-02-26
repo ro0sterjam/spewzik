@@ -9,7 +9,8 @@ function RoomPage(ytplayer) {
 	}
 	
 	function loadTrack(track) {
-		$('#currentTrackName').text(track.name);
+		$('#currentTrack').text(track.name);
+		$('#currentTrack').attr('data-trackid', track._id);
 		$('var#skipCount').text(0);
 		$('var#rating').attr('data-trackId', track._id);
 		$('var#rating').text(track.rating);
@@ -17,11 +18,20 @@ function RoomPage(ytplayer) {
 	}
 	
 	function clearTrack() {
-		$('#currentTrackName').text('Nothing');
+		$('#currentTrack').text('Nothing');
+		$('#currentTrack').removeAttr('data-trackid');
 		$('var#skipCount').text(0);
 		$('var#rating').removeAttr('data-trackId');
 		$('var#rating').text(0);
 		$('#controls').find('.vote').removeAttr('data-trackid');
+	}
+	
+	this.isPlaying = function() {
+		return !!this.getCurrentTrack();
+	}
+	
+	this.getCurrentTrackId = function() {
+		return $('#currentTrack').attr('data-trackid') || null;
 	}
 	
 	this.getRoomId = function() {
@@ -105,6 +115,11 @@ function ServerConnection(roomId, roomPage) {
 		socket.emit('track', track);
 	}
 	
+	this.sendReady = function() {
+		console.log('sending ready');
+		socket.emit('ready');
+	}
+	
 	function refresh() {
 		socket.emit('refresh');
 	}
@@ -115,11 +130,12 @@ function ServerConnection(roomId, roomPage) {
 	});
 
 	socket.on('play', function(track) {
-		var nextTrackId = roomPage.popTrackIdFromQueue();
-		if (nextTrackId !== track._id) {
-			refresh();
-		} else {
+		if (track._id === roomPage.getCurrentTrackId()) {
 			roomPage.playTrack(track);
+		} else if (track._id === roomPage.popTrackIdFromQueue()) {
+			roomPage.playTrack(track);
+		} else {
+			refresh();
 		}
 	});
 	
@@ -147,7 +163,7 @@ function ServerConnection(roomId, roomPage) {
 		roomPage.updateSkips(skipCount)
 	});
 }
-	
+
 function onYouTubePlayerReady() {
 	var ytplayer = document.getElementById('ytplayer');
 	var roomPage = new RoomPage(ytplayer);
@@ -167,9 +183,17 @@ function onYouTubePlayerReady() {
 	});
 
 	$(document).on('click', '#addTrack', function() {
-		var track = {
-			host: 'youtube',
-			eid: $('input#trackExtId').val()
+		console.log('adding track');
+		var text = $('input#trackExtId').val();
+		if (text.length > 25) {
+			var track = {
+				url: text
+			}
+		} else {
+			var track = {
+				host: 'youtube',
+				eid: text
+			}
 		}
 		connection.addTrack(track);
 	  $('input#trackExtId').val('');

@@ -21,11 +21,16 @@ function FrontPage() {
 		roomLinkHtml = roomLinkHtml.replaceAll('{roomId}', room._id);
 		roomLinkHtml = roomLinkHtml.replaceAll('{roomName}', room.name);
 		roomLinkHtml = roomLinkHtml.replaceAll('{roomListeners}', room.listenerCount);
+		roomLinkHtml = roomLinkHtml.replaceAll('{currentTrack}', room.playlist[0] && room.playlist[0].name || 'Nothing');
 		$('div#rooms').append(roomLinkHtml);
 	}
 	
 	this.updateListeners = function(roomId, listenerCount) {
 		$($("var.listenerCount[data-roomid='" + roomId + "']")).text(listenerCount);
+	}
+	
+	this.updateCurrentlyPlaying = function(roomId, track) {
+		$($(".currentTrack[data-roomid='" + roomId + "']")).text(track && track.name || 'Nothing');
 	}
 	
 	this.setError = function(message) {
@@ -63,6 +68,10 @@ function ServerConnection(frontPage) {
 	
 	socket.on('listenerCount', function(roomId, listenerCount) {
 		frontPage.updateListeners(roomId, listenerCount);
+	});
+	
+	socket.on('newTrack', function(roomId, track) {
+		frontPage.updateCurrentlyPlaying(roomId, track);
 	});
 }
 

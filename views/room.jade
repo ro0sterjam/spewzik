@@ -20,7 +20,7 @@ html
     div#content
       var#roomId(data-roomid='#{roomId}')
       h3 Currently playing : 
-        var#currentTrackName Nothing
+        var#currentTrack Nothing
       h5
         var#listenerCount 0
         |  listeners; 
@@ -43,6 +43,6 @@ html
           button.vote(data-trackid='{trackId}', data-val='up') Up
           button.vote(data-trackid='{trackId}', data-val='down') Down
       div
-        input#trackExtId(type='text', placeholder='Youtube ID')
+        input#trackExtId(type='text', placeholder='Youtube URL')
         button#addTrack Add Track
       var#error
