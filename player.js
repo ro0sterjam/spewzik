@@ -371,6 +371,21 @@ function connectRoom(socket) {
 			});
 		}
 	});
+	
+	socket.on('resync', function() {
+		var room = client.getRoom();
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			room.getCurrentlyPlaying(function(err, track) {
+				if (err) {
+					socket.emit('error', err.message);
+				} else if (!!track) {
+					socket.emit('resync', track.pos);
+				}
+			});
+		}
+	});
 
 	socket.on('track', function(track) {
 		var room = client.getRoom();

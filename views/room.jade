@@ -25,21 +25,27 @@ html
         var#listenerCount 0
         |  listeners; 
         var#skipCount 0
-        |  skips; Rating: 
+        |  skips; Digs: 
         var#rating.rating 0
-      object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3&controls=0')
+      object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3&disablekb=1&controls=0')
         param(name='allowScriptAccess', value='always')
         param(name='allowFullScreen', value='false')
       div#controls
         button#skip Skip
-        button.vote(data-val='up') Up
-        button.vote(data-val='down') Down
+        var#time 0:00
+        |  / 
+        var#totalTime 0:00
+        br
+        button.vote(data-val='down') bury this shit
+        button.vote(data-val='up') i can dig it
       div#tracks
       div#trackHtml(style='display: none;')
         div.track(data-trackid='{trackId}')
-          p {trackName}
-          p Rating: 
-            var.rating(data-trackid='{trackId}') {trackRating}
+          | {trackName}
+          br
+          | Rating: 
+          var.rating(data-trackid='{trackId}') {trackRating}
+          br
           button.vote(data-trackid='{trackId}', data-val='up') Up
           button.vote(data-trackid='{trackId}', data-val='down') Down
       div

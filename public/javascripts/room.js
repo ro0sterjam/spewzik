@@ -1,6 +1,28 @@
 String.prototype.replaceAll = function (find, replace) {
-    var str = this;
-    return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+	return this.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+};
+
+Number.prototype.toHHMMSS = function () {
+	var hours = Math.floor(this / 3600);
+	var minutes = Math.floor((this - (hours * 3600)) / 60);
+	var seconds = this - (hours * 3600) - (minutes * 60);
+	
+	var time = '';
+	if (hours > 0) {
+		if (hours < 10) {
+			time += '0';
+		}
+		time += hours + ':';
+	}
+	if (minutes < 10) {
+		time += '0';
+	}
+	time += minutes + ':';
+	if (seconds < 10) {
+		time += '0';
+	}
+	time += seconds;
+	return time;
 };
 
 function RoomPage(ytplayer) {
@@ -14,6 +36,7 @@ function RoomPage(ytplayer) {
 		$('var#skipCount').text(0);
 		$('var#rating').attr('data-trackId', track._id);
 		$('var#rating').text(track.rating);
+		$('var#totalTime').text(track.duration.toHHMMSS());
 		$('#controls').find('.vote').attr('data-trackid', track._id);
 	}
 	
@@ -23,6 +46,8 @@ function RoomPage(ytplayer) {
 		$('var#skipCount').text(0);
 		$('var#rating').removeAttr('data-trackId');
 		$('var#rating').text(0);
+		$('var#totalTime').text('0:00');
+		$('var#time').text('0:00');
 		$('#controls').find('.vote').removeAttr('data-trackid');
 	}
 	
@@ -119,9 +144,8 @@ function ServerConnection(roomId, roomPage) {
 		socket.emit('track', track);
 	}
 	
-	this.sendReady = function() {
-		console.log('sending ready');
-		socket.emit('ready');
+	this.sendResync = function() {
+		socket.emit('resync');
 	}
 	
 	function refresh() {
@@ -134,13 +158,15 @@ function ServerConnection(roomId, roomPage) {
 	});
 
 	socket.on('play', function(track) {
-		if (track._id === roomPage.getCurrentTrackId()) {
-			roomPage.seekTo(track.pos);
-		} else if (track._id === roomPage.popTrackIdFromQueue()) {
+		if (track._id === roomPage.popTrackIdFromQueue()) {
 			roomPage.playTrack(track);
 		} else {
 			refresh();
 		}
+	});
+	
+	socket.on('resync', function(pos) {
+		roomPage.seekTo(pos);
 	});
 	
 	socket.on('stop', function() {
@@ -204,14 +230,47 @@ function onYouTubePlayerReady() {
 	});
 	
 	ytplayer.addEventListener('onStateChange', 'onYouTubeStateChange');
-
-
+	
+	this.startTimer = startTimer;
+	this.stopTimer = stopTimer;
+	
+	var timer = null;
+	
+	function startTimer() {
+		timer = window.setInterval(function() {
+			$('var#time').text(ytplayer.getCurrentTime());
+		}, 1000);
+	}
+	
+	function stopTimer() {
+		if (timer) {
+			window.clearInterval(timer);
+			timer = null;
+		}
+	}
+	
 	this.onYouTubeStateChange = function onYouTubeStateChange(newState) {
+		var UNSTARTED = -1;
+		var ENDED = 0;
 		var PLAYING = 1;
 		var PAUSED = 2;
 		var BUFFERING = 3;
+		var VIDEO_CUED = 5;
+		
+		if (roomPage.isPlaying() && newState === PLAYING && !onYouTubeStateChange.timer) {
+			console.log('starting timer');
+			onYouTubeStateChange.timer = window.setInterval(function() {
+				var time = Math.floor(ytplayer.getCurrentTime());
+				$('var#time').text(time.toHHMMSS());
+			}, 1000);
+		} else if (onYouTubeStateChange.timer && newState !== PLAYING) {
+			console.log('clearing timer');
+			window.clearInterval(onYouTubeStateChange.timer);
+			onYouTubeStateChange.timer = null;
+		}
+		
 		if (roomPage.isPlaying() && [PAUSED, BUFFERING].indexOf(onYouTubeStateChange.oldState) > -1 && newState === PLAYING) {
-			connection.sendReady();
+			connection.sendResync();
 		}
 		onYouTubeStateChange.oldState = newState;
 	}
