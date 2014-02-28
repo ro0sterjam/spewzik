@@ -3,88 +3,25 @@ String.prototype.replaceAll = function (find, replace) {
     return str.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
 };
 
-function FrontPage() {
-	if (!(this instanceof arguments.callee)) {
-		return new FrontPage();
-	}
+Number.prototype.toHHMMSS = function () {
+	var hours = Math.floor(this / 3600);
+	var minutes = Math.floor((this - (hours * 3600)) / 60);
+	var seconds = this - (hours * 3600) - (minutes * 60);
 	
-	this.loadRooms = function(rooms) {
-		$('div#rooms').empty();
-		for (var i in rooms) {
-			this.addRoomToList(rooms[i]);
+	var time = '';
+	if (hours > 0) {
+		if (hours < 10) {
+			time += '0';
 		}
+		time += hours + ':';
 	}
-	
-	this.addRoomToList = function(room) {
-		console.log(room);
-		var roomLinkHtml = $('div#roomLinkHtml').html();
-		roomLinkHtml = roomLinkHtml.replaceAll('{roomId}', room._id);
-		roomLinkHtml = roomLinkHtml.replaceAll('{roomName}', room.name);
-		roomLinkHtml = roomLinkHtml.replaceAll('{roomListeners}', room.listenerCount);
-		roomLinkHtml = roomLinkHtml.replaceAll('{currentTrack}', room.playlist[0] && room.playlist[0].name || 'Nothing');
-		$('div#rooms').append(roomLinkHtml);
+	if (minutes < 10) {
+		time += '0';
 	}
-	
-	this.updateListeners = function(roomId, listenerCount) {
-		$($("var.listenerCount[data-roomid='" + roomId + "']")).text(listenerCount);
+	time += minutes + ':';
+	if (seconds < 10) {
+		time += '0';
 	}
-	
-	this.updateCurrentlyPlaying = function(roomId, track) {
-		$($(".currentTrack[data-roomid='" + roomId + "']")).text(track && track.name || 'Nothing');
-	}
-	
-	this.setError = function(message) {
-		$('#error').text(message);
-	}
-	
-	this.clearError = function() {
-		$('#error').text('');
-	}
-}
-
-function ServerConnection(frontPage) {
-	if (!(this instanceof arguments.callee)) {
-		return new ServerConnection(frontPage);
-	}
-	
-	console.log('connecting');
-	var socket = io.connect('/front');
-	
-	this.createRoom = function(roomName) {
-		socket.emit('room', roomName);
-	}
-
-	socket.on('room', function(room) {
-		frontPage.addRoomToList(room);
-	});
-
-	socket.on('rooms', function(rooms) {
-		frontPage.loadRooms(rooms);
-	});
-	
-	socket.on('error', function(message) {
-		currentPage.setError(message);
-	});
-	
-	socket.on('listenerCount', function(roomId, listenerCount) {
-		frontPage.updateListeners(roomId, listenerCount);
-	});
-	
-	socket.on('newTrack', function(roomId, track) {
-		frontPage.updateCurrentlyPlaying(roomId, track);
-	});
-}
-
-$(document).ready(function(){
-	var frontPage = new FrontPage();
-  var connection = new ServerConnection(frontPage);
-
-	$(document).on('click', '#addRoom', function() {
-		connection.createRoom($("input#roomName").val());
-		$("input#roomName").val('');
-	});
-
-	$(document).on('click', '#openAdd', function() {
-	  $('#addWrapper').css({ height: $('#addContainer').height() });
-	});
-});
+	time += seconds;
+	return time;
+};

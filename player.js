@@ -27,6 +27,7 @@ function Client(socket) {
 	}
 	console.log('creating client with for socket id ' + socket.id);
 	
+	// public functions
 	this.vote = vote;
 	this.hasVoted = hasVoted;
 	this.removeVote = removeVote;
@@ -94,8 +95,10 @@ function Room(roomId) {
 		return new Room(roomId);
 	}
 	
+	// public variables
 	this.roomId = roomId;
 	
+	// public functions
 	this.getRoomData = getRoomData;
 	this.addTrackToQueue = addTrackToQueue;
 	this.getCurrentlyPlaying = getCurrentlyPlaying;

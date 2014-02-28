@@ -8,6 +8,7 @@ html
     script(type='text/javascript', src='/javascripts/jquery-1.10.1.min.js')
     script(type='text/javascript', src='/javascripts/less-1.6.1.min.js')
     script(type='text/javascript', src='/socket.io/socket.io.js')
+    script(type='text/javascript', src='/javascripts/spewzik.js')
     script(type='text/javascript', src='/javascripts/room.js')
   body
     div#logo
@@ -27,7 +28,7 @@ html
         var#skipCount 0
         |  skips; Digs: 
         var#rating.rating 0
-      object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3&disablekb=1&iv_load_policy=3&controls=0')
+      object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3&disablekb=1&iv_load_policy=3&showinfo=0&&rel=0&controls=0')
         param(name='allowScriptAccess', value='always')
         param(name='allowFullScreen', value='false')
       div#controls
