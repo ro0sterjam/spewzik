@@ -118,3 +118,27 @@ div.track {
     overflow: hidden;
   }
 }
+
+.selected {
+  font-weight: bold;
+}
+
+#currentTrack:before {
+  content: attr(data-trackname);
+}
+
+#save[value="0"]:before {
+  content: "Save";
+}
+
+#save[value="1"]:before {
+  content: "Saved";
+}
+
+#mute[value="0"]:before {
+  content: "Mute";
+}
+
+#mute[value="1"]:before {
+  content: "Unmute";
+}

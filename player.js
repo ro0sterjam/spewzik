@@ -29,7 +29,6 @@ function Client(socket) {
 	
 	// public functions
 	this.vote = vote;
-	this.hasVoted = hasVoted;
 	this.removeVote = removeVote;
 	this.skip = skip;
 	this.hasSkipped = hasSkipped;
@@ -44,11 +43,10 @@ function Client(socket) {
 	
 	function vote(trackId, rating) {
 		console.log('socket ' + socket.id + ' voting for track with id ' + trackId);
-		votes[trackId] = rating;
-	}
-	
-	function hasVoted(trackId) {
-		return !!votes[trackId];
+		var old = votes[trackId] || 0;
+		votes[trackId] = rating * (rating != votes[trackId]);
+		socket.emit('vote', trackId, votes[trackId]);
+		return votes[trackId] - old;
 	}
 	
 	function hasSkipped() {
@@ -418,29 +416,24 @@ function connectRoom(socket) {
 		}
 	});
 	
-	socket.on('vote', function(trackId, val) {
-		// only allow to vote once per track
-		if (client.hasVoted(trackId)) {
-			return;
-		}
-		var room = client.getRoom();
-		if (!room) {
-			socket.emit('error', 'User not in room');
+	socket.on('vote', function(trackId, rate) {
+		if (rate === 0 || typeof(rate) !== 'number') {
+			socket.emit('error', 'Invalid rating');
 		} else {
-			if (val === 'up') {
-				var rate = 1;
-			} else if (val === 'down') {
-				var rate = -1;
+			var room = client.getRoom();
+			if (!room) {
+				socket.emit('error', 'User not in room');
+			} else {
+				rate = rate / Math.abs(rate);
+				dbaccess.addToTrackRating(room.roomId, trackId, client.vote(trackId, rate), function(err, track) {
+					if (err) {
+						socket.emit('error', err.message);
+					} else {
+						room.emitToAllInRoom('trackUpdate', track);
+						socket.emit('voted', trackId, rate);
+					}
+				});
 			}
-
-			dbaccess.addToTrackRating(room.roomId, trackId, rate, function(err, track) {
-				if (err) {
-					socket.emit('error', err.message);
-				} else {
-					client.vote(trackId, rate);
-					room.emitToAllInRoom('trackUpdate', track);
-				}
-			});
 		}
 	});
 	

@@ -4,24 +4,45 @@ function RoomPage(ytplayer) {
 	}
 	
 	function loadTrack(track) {
-		$('#currentTrack').text(track.name);
 		$('#currentTrack').attr('data-trackid', track._id);
+		$('#currentTrack').attr('data-trackname', track.name);
 		$('var#skipCount').text(0);
 		$('var#rating').attr('data-trackId', track._id);
 		$('var#rating').text(track.rating);
 		$('var#totalTime').text(track.duration.toHHMMSS());
-		$('#controls').find('.vote').attr('data-trackid', track._id);
+		$('#votes').find('.vote').attr('data-trackid', track._id);
 	}
 	
 	function clearTrack() {
-		$('#currentTrack').text('Nothing');
 		$('#currentTrack').removeAttr('data-trackid');
+		$('#currentTrack').removeAttr('data-trackname');
 		$('var#skipCount').text(0);
 		$('var#rating').removeAttr('data-trackId');
 		$('var#rating').text(0);
 		$('var#totalTime').text('0:00');
-		$('var#time').text('0:00');
+		$('var#currentTime').text('0:00');
 		$('#controls').find('.vote').removeAttr('data-trackid');
+		$('#save').val(0);
+	}
+	
+	this.updateVote = function(trackId, rate) {
+		$('.vote[data-trackid="' + trackId + '"]').removeClass('selected');
+		$('.vote[data-trackid="' + trackId + '"][value="' + rate + '"]').addClass('selected');
+	}
+	
+	this.setMuted = function(mute) {
+		if (mute) {
+			ytplayer.mute();
+		} else {
+			ytplayer.unMute();
+		}
+		this.prevVolume = mute? $('#volume').val() : this.prevVolume;
+		$('#mute').val(mute? '1' : '0');
+		$('#volume').val(mute? 0 : this.prevVolume);
+	}
+	
+	this.setVolume = function(volume) {
+		ytplayer.setVolume(volume * 100);
 	}
 	
 	this.isPlaying = function() {
@@ -33,7 +54,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.getCurrentTrackName = function() {
-		return $('#currentTrack').text();
+		return $('#currentTrack').attr('data-trackname') || null;
 	}
 	
 	this.getRoomId = function() {
@@ -86,7 +107,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.updateTrack = function(track) {
-		$($("var.rating[data-trackid='" + track._id + "']")).text(track.rating);
+		$($('var.rating[data-trackid="' + track._id + '"]')).text(track.rating);
 	}
 	
 	this.setError = function(message) {
@@ -109,8 +130,8 @@ function ServerConnection(roomId, roomPage) {
 		socket.emit('join', roomId);
 	});
 	
-	this.vote = function(trackId, val) {
-		socket.emit('vote', trackId, val);
+	this.vote = function(trackId, rate) {
+		socket.emit('vote', trackId, rate);
 	}
 	
 	this.skipTrack = function() {
@@ -169,6 +190,10 @@ function ServerConnection(roomId, roomPage) {
 	socket.on('skipCount', function(skipCount) {
 		roomPage.updateSkips(skipCount)
 	});
+	
+	socket.on('vote', function(trackId, rate) {
+		roomPage.updateVote(trackId, rate);
+	});
 }
 
 function onYouTubePlayerReady() {
@@ -176,12 +201,20 @@ function onYouTubePlayerReady() {
 	var roomPage = new RoomPage(ytplayer);
 	var roomId = roomPage.getRoomId();
 	var connection = new ServerConnection(roomId, roomPage);
+	
+	$(document).on('change', '#volume', function() {
+		roomPage.setVolume($(this).val());
+	});
+	
+	$(document).on('click', '#mute', function() {
+		roomPage.setMuted(!ytplayer.isMuted());
+	});
 
 	$(document).on('click', '.vote', function() {
 	  var trackId = $(this).attr('data-trackid');
+		console.log(trackId);
 		if (trackId) {
-		  var val = $(this).attr('data-val');
-			connection.vote(trackId, val);
+			connection.vote(trackId, parseInt($(this).attr('value')));
 		}
 	});
 
@@ -217,6 +250,7 @@ function onYouTubePlayerReady() {
 				savedTracks[roomPage.getCurrentTrackId()] = roomPage.getCurrentTrackName();
 				localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
 			}
+			$(this).val('1');
 		}
 	});
 	
@@ -234,7 +268,7 @@ function onYouTubePlayerReady() {
 	
 	function startTimer() {
 		timer = window.setInterval(function() {
-			$('var#time').text(ytplayer.getCurrentTime());
+			$('var#currentTime').text(ytplayer.getCurrentTime());
 		}, 1000);
 	}
 	
@@ -257,7 +291,7 @@ function onYouTubePlayerReady() {
 			console.log('starting timer');
 			onYouTubeStateChange.timer = window.setInterval(function() {
 				var time = Math.floor(ytplayer.getCurrentTime());
-				$('var#time').text(time.toHHMMSS());
+				$('var#currentTime').text(time.toHHMMSS());
 			}, 1000);
 		} else if (onYouTubeStateChange.timer && newState !== PLAYING) {
 			console.log('clearing timer');
