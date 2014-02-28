@@ -5,7 +5,7 @@ function RoomPage(ytplayer) {
 	
 	function loadTrack(track) {
 		$('#currentTrack').attr('data-trackid', track._id);
-		$('#currentTrack').attr('data-trackname', track.name);
+		$('#currentTrack').text(track.name);
 		$('var#skipCount').text(0);
 		$('var#rating').attr('data-trackId', track._id);
 		$('var#rating').text(track.rating);
@@ -19,7 +19,7 @@ function RoomPage(ytplayer) {
 	
 	function clearTrack() {
 		$('#currentTrack').removeAttr('data-trackid');
-		$('#currentTrack').removeAttr('data-trackname');
+		$('#currentTrack').text('');
 		$('var#skipCount').text(0);
 		$('var#rating').removeAttr('data-trackId');
 		$('var#rating').text(0);
@@ -88,7 +88,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.getCurrentTrackName = function() {
-		return $('#currentTrack').attr('data-trackname') || null;
+		return $('#currentTrack').text();
 	}
 	
 	this.getRoomId = function() {

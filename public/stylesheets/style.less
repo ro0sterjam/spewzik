@@ -106,6 +106,20 @@ div.track {
   }
 }
 
+.cf:before,
+.cf:after {
+    content: " "; /* 1 */
+    display: table; /* 2 */
+}
+
+.cf:after {
+    clear: both;
+}
+
+.cf {
+    *zoom: 1;
+}
+
 #content {
   text-align: center;
   a {
@@ -117,10 +131,6 @@ div.track {
     height: 0;
     overflow: hidden;
   }
-}
-
-#currentTrack:before {
-  content: attr(data-trackname);
 }
 
 #belowPlayer {
@@ -139,6 +149,12 @@ div.track {
 }
 
 #volume {
+  margin: auto;
+  width: 160px;
+  height: 30px;
+  * {
+    float: left;
+  }
   #volume-bar {
     vertical-align: middle;
   }
