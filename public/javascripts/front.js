@@ -80,6 +80,10 @@ $(document).ready(function(){
 	});
 
 	$(document).on('click', '#openAdd', function() {
-	  $('#addWrapper').css({ height: $('#addContainer').height() });
+		if ($('#addWrapper').height() === 0) {
+	  	$('#addWrapper').css({ height: $('#addContainer').height() });
+		} else {
+		  $('#addWrapper').css({ height: 0 });
+		}
 	});
 });

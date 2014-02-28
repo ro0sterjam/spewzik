@@ -53,7 +53,7 @@ body {
   }
 }
 
-.button {
+#openAdd {
   .transition(all, 0.2s, ease-out);
   .bevel(@yellow);
   font-weight: 700;
@@ -119,26 +119,27 @@ div.track {
   }
 }
 
-.selected {
-  font-weight: bold;
-}
-
 #currentTrack:before {
   content: attr(data-trackname);
 }
 
-#save[value="0"]:before {
-  content: "Save";
+#belowPlayer {
+  #roomDetails, #save, .vote, #skip {
+    cursor: pointer;
+    padding: 10px;
+  }
+  #roomDetails, #time {
+    .altfont;
+  }
 }
 
-#save[value="1"]:before {
-  content: "Saved";
+.vote, #mute {
+  cursor: pointer;
+  padding: 5px;
 }
 
-#mute[value="0"]:before {
-  content: "Mute";
-}
-
-#mute[value="1"]:before {
-  content: "Unmute";
+#volume {
+  #volume-bar {
+    vertical-align: middle;
+  }
 }

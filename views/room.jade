@@ -4,7 +4,7 @@ html
     title mmhmmmmm
     link(rel='stylesheet/less', type='text/css', href='/stylesheets/style.less')
     link(href='http://fonts.googleapis.com/css?family=Julius+Sans+One|Open+Sans:400,300,700,600', rel='stylesheet', type='text/css')
-    link(href='/stylesheets/font-awesome.min.css')
+    link(rel='stylesheet', href='/stylesheets/font-awesome.min.css')
     script(type='text/javascript', src='/javascripts/jquery-1.10.1.min.js')
     script(type='text/javascript', src='/javascripts/less-1.6.1.min.js')
     script(type='text/javascript', src='/socket.io/socket.io.js')
@@ -22,41 +22,43 @@ html
       var#roomId(data-roomid='#{roomId}')
       h3 Currently playing : 
         var#currentTrack
-      h5
-        var#listenerCount 0
-        |  listeners; 
-        var#skipCount 0
-        |  skips; Digs: 
-        var#rating.rating 0
       object#ytplayer(type='application/x-shockwave-flash', width='640', height='360', data='http://www.youtube.com/v/RHevGGYuAsw?enablejsapi=1&playerapiid=ytplayer&version=3&disablekb=1&iv_load_policy=3&showinfo=0&&rel=0&controls=0')
         param(name='allowScriptAccess', value='always')
         param(name='allowFullScreen', value='false')
-      div#controls  
-        button#save(value='0')
-        button#mute(value='0')
-        input#volume(type='range', min='0', max='1', step='0.05', value='1')
-        button#skip Skip
-        div#time
+      div#belowPlayer
+        i.vote(value='-1').fa.fa-2x.fa-thumbs-o-down
+        i#skip.fa.fa-2x.fa-step-forward
+        i#roomDetails
+          var#listenerCount 0
+          |  listeners ::: 
+          var#skipCount 0
+          |  skips ::: 
+          var#rating.rating 0
+          |  digs
+        i#save.fa.fa-2x.fa-heart-o
+        i.vote(value='1').fa.fa-2x.fa-thumbs-o-up
+        br
+        i#time
           var#currentTime 0:00
           |  / 
           var#totalTime 0:00
-      div#votes
-        button.vote(value='-1') bury this shit
-        button.vote(value='1') i can dig it
-      div#tracks
-      div#trackHtml(style='display: none;')
-        div.track(data-trackid='{trackId}')
-          | {trackName}
-          br
-          | Rating: 
-          var.rating(data-trackid='{trackId}') {trackRating}
-          br
-          button.vote.downvote(data-trackid='{trackId}', value='-1') bury
-          button.vote.upvote(data-trackid='{trackId}', value='1') dig
+      div#controls
+        div#volume
+          input#volume-bar(type='range', min='0', max='1', step='0.05', value='1')
+          i#mute.fa.fa-volume-up
       div
         input#trackExtId(type='text', placeholder='Youtube URL')
         button#addTrack Add Track
+      br
+      div#tracks
+      div#trackHtml(style='display: none;')
+        div.track(data-trackid='{trackId}')
+          | {trackName} ::: 
+          var.rating(data-trackid='{trackId}') {trackRating}
+          |  digs 
+          i.vote.downvote.fa.fa-thumbs-o-down(data-trackid='{trackId}', value='-1')
+          i.vote.upvote.fa.fa-thumbs-o-up(data-trackid='{trackId}', value='1')
       div(style='display: none;')
         input#nickname(type='text', placeholder='Nickname')
         button#changeName Change Name
-      var#error
+    var#error

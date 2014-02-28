@@ -10,7 +10,11 @@ function RoomPage(ytplayer) {
 		$('var#rating').attr('data-trackId', track._id);
 		$('var#rating').text(track.rating);
 		$('var#totalTime').text(track.duration.toHHMMSS());
-		$('#votes').find('.vote').attr('data-trackid', track._id);
+		$('#belowPlayer').find('.vote').attr('data-trackid', track._id);
+		if ((JSON.parse(localStorage.getItem('savedTracks')) || {})[track._id]) {
+			$('#save').addClass('fa-heart');
+			$('#save').removeClass('fa-heart-o');
+		}
 	}
 	
 	function clearTrack() {
@@ -21,28 +25,58 @@ function RoomPage(ytplayer) {
 		$('var#rating').text(0);
 		$('var#totalTime').text('0:00');
 		$('var#currentTime').text('0:00');
-		$('#controls').find('.vote').removeAttr('data-trackid');
-		$('#save').val(0);
+		
+		$('#belowPlayer').find('.vote').removeAttr('data-trackid');
+		$('#belowPlayer').find('.vote[value="1"]').addClass('fa-thumbs-o-up');
+		$('#belowPlayer').find('.vote[value="-1"]').addClass('fa-thumbs-o-down');
+		$('#belowPlayer').find('.vote[value="1"]').removeClass('fa-thumbs-up');
+		$('#belowPlayer').find('.vote[value="-1"]').removeClass('fa-thumbs-down');
+		$('#save').addClass('fa-heart-o');
+		$('#save').removeClass('fa-heart');
 	}
 	
 	this.updateVote = function(trackId, rate) {
-		$('.vote[data-trackid="' + trackId + '"]').removeClass('selected');
-		$('.vote[data-trackid="' + trackId + '"][value="' + rate + '"]').addClass('selected');
+		$('.vote[data-trackid="' + trackId + '"][value="1"]').addClass('fa-thumbs-o-up');
+		$('.vote[data-trackid="' + trackId + '"][value="-1"]').addClass('fa-thumbs-o-down');
+		$('.vote[data-trackid="' + trackId + '"][value="1"]').removeClass('fa-thumbs-up');
+		$('.vote[data-trackid="' + trackId + '"][value="-1"]').removeClass('fa-thumbs-down');
+		if (rate === 1) {
+			$('.vote[data-trackid="' + trackId + '"][value="1"]').addClass('fa-thumbs-up');
+			$('.vote[data-trackid="' + trackId + '"][value="1"]').removeClass('fa-thumbs-o-up');
+		} else if (rate === -1) {
+			$('.vote[data-trackid="' + trackId + '"][value="-1"]').addClass('fa-thumbs-down');
+			$('.vote[data-trackid="' + trackId + '"][value="-1"]').removeClass('fa-thumbs-o-down');
+		}
+	}
+	
+	this.setVolume = function(volume) {
+		$('#volume-bar').val(volume);
+		if (volume == 0) {
+			$('#mute').addClass('fa-volume-off');
+			$('#mute').removeClass('fa-volume-up');
+			$('#mute').removeClass('fa-volume-down');
+			ytplayer.setVolume(0);
+		} else if (volume <= 0.5){	
+			$('#mute').addClass('fa-volume-down');
+			$('#mute').removeClass('fa-volume-up');
+			$('#mute').removeClass('fa-volume-off');
+			ytplayer.setVolume(volume * 100);
+		} else {	
+			$('#mute').addClass('fa-volume-up');
+			$('#mute').removeClass('fa-volume-down');
+			$('#mute').removeClass('fa-volume-off');
+			ytplayer.setVolume(volume * 100);
+		}
 	}
 	
 	this.setMuted = function(mute) {
 		if (mute) {
+			this.prevVolume = $('#volume-bar').val();
+			this.setVolume(0);
 			ytplayer.mute();
-		} else {
-			ytplayer.unMute();
+		} else {	
+			this.setVolume(this.prevVolume || 1);
 		}
-		this.prevVolume = mute? $('#volume').val() : this.prevVolume;
-		$('#mute').val(mute? '1' : '0');
-		$('#volume').val(mute? 0 : this.prevVolume);
-	}
-	
-	this.setVolume = function(volume) {
-		ytplayer.setVolume(volume * 100);
 	}
 	
 	this.isPlaying = function() {
@@ -72,6 +106,7 @@ function RoomPage(ytplayer) {
 	}
 	
 	this.playTrack = function(track) {
+		clearTrack();
 		loadTrack(track);
 		ytplayer.loadVideoById(track.eid, track.pos);
 	}
@@ -202,7 +237,7 @@ function onYouTubePlayerReady() {
 	var roomId = roomPage.getRoomId();
 	var connection = new ServerConnection(roomId, roomPage);
 	
-	$(document).on('change', '#volume', function() {
+	$(document).on('change', '#volume-bar', function() {
 		roomPage.setVolume($(this).val());
 	});
 	
@@ -249,8 +284,14 @@ function onYouTubePlayerReady() {
 			if (!savedTracks[roomPage.getCurrentTrackId()]) {
 				savedTracks[roomPage.getCurrentTrackId()] = roomPage.getCurrentTrackName();
 				localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+				$(this).addClass('fa-heart');
+				$(this).removeClass('fa-heart-o');
+			} else {
+				delete(savedTracks[roomPage.getCurrentTrackId()]);
+				localStorage.setItem('savedTracks', JSON.stringify(savedTracks));
+				$(this).addClass('fa-heart-o');
+				$(this).removeClass('fa-heart');
 			}
-			$(this).val('1');
 		}
 	});
 	
