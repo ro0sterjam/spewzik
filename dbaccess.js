@@ -12,7 +12,7 @@ var MAX_TRACK_LENGTH = 15 * 60;
 if (typeof(process.env.MONGOHQ_URL) == 'undefined') {
 	process.env.MONGOHQ_URL = 'localhost:27017/spewzik';
 }
-var db = monk(process.env.MONGOHQ_URL);
+var db = monk(process.env.MONGOHQ_URL + '?auto_reconnect');
 
 db.get('rooms').ensureIndex({ name: 1 }, { unique: true });
 db.get('tracks').ensureIndex({ host: 1, eid: 1 }, { unique: true });
