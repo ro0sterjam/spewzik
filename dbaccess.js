@@ -545,8 +545,7 @@ function getRandomWeightedTrack(roomId, callback) {
 		} else if (room === null) {
 			callback(new Error('Room does not exist for id' + roomId));
 		} else {
-			// get a random track based on weight 
-			var now = Date().getTime();
+			// get a random track based on weight
 			var track = room.tracks.reduce(function(currTrack, track, i, tracks) {
 				// calculate weight of current track
 				
