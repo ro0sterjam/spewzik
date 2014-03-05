@@ -6,6 +6,7 @@ var querystring = require('querystring');
 var NEXT_TRACK_DELAY = 5;
 var RATIO_TO_SKIP = 0.6;
 var AUTO_PLAY_RANDOM = false;
+var CLIENT_RANDOM_QUEUE_LIMIT = 2;
 
 exports.startPlayingAllRooms = startPlayingAllRooms;
 exports.addTrackToPlaylist = addTrackToPlaylist;
@@ -37,9 +38,13 @@ function Client(socket) {
 	this.joinRoom = joinRoom;
 	this.leaveRoom = leaveRoom;
 	this.getRoom = getRoom;
+	this.queueRandom = queueRandom;
+	this.getRandomQueueCount = getRandomQueueCount;
+	this.resetRandomQueueCount = resetRandomQueueCount;
 	
 	var roomId = null;
 	var skipped = false;
+	var randomQueueCount = 0;
 	var votes = {};
 	
 	function vote(trackId, rating) {
@@ -59,12 +64,25 @@ function Client(socket) {
 		skipped = true;
 	}
 	
+	function queueRandom() {
+		console.log('socket ' + socket.id + ' chose random track');
+		randomQueueCount = randomQueueCount + 1;
+	}
+	
+	function getRandomQueueCount() {
+		return randomQueueCount;
+	}
+	
 	function removeVote(trackId) {
 		delete votes[trackId];
 	}
 	
 	function resetSkipped() {
 		skipped = false;
+	}
+	
+	function resetRandomQueueCount() {
+		randomQueueCount = 0;
 	}
 	
 	function joinRoom(newRoomId) {
@@ -207,6 +225,7 @@ function Room(roomId) {
 		getListeners().forEach(function(listener) {
 			listener.removeVote(currentTrackId);
 			listener.resetSkipped();
+			listener.resetRandomQueueCount();
 		});
 	}
 	
@@ -508,17 +527,23 @@ function connectRoom(socket) {
 	});
 	
 	socket.on('random', function() {
-		var room = client.getRoom()
-		if (!room) {
-			socket.emit('error', 'User not in room');
+		if (client.getRandomQueueCount() >= CLIENT_RANDOM_QUEUE_LIMIT) {
+			socket.emit('error', 'Limit ' + CLIENT_RANDOM_QUEUE_LIMIT + ' random queue(s) per track');
 		} else {
-			room.addRandomTrackToPlaylist(function(err, track) {
-				if (err) {
-					socket.emit('error', err.message);
-				} else if (track === null) {
-					socket.emit('error', 'No available tracks to queue');
-				}
-			});
+			var room = client.getRoom()
+			if (!room) {
+				socket.emit('error', 'User not in room');
+			} else {
+				room.addRandomTrackToPlaylist(function(err, track) {
+					if (err) {
+						socket.emit('error', err.message);
+					} else if (track === null) {
+						socket.emit('error', 'No available tracks to queue');
+					} else {
+						client.queueRandom();
+					}
+				});
+			}
 		}
 	});
 	
@@ -527,6 +552,7 @@ function connectRoom(socket) {
 		if (!!room) {
 			client.leaveRoom(room.roomId);
 			client.resetSkipped();
+			client.resetRandomQueueCount();
 			room.emitListenerCount();
 			if (room.isPlaying()) {
 				room.onSkip();

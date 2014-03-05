@@ -15,6 +15,13 @@ function RoomPage(ytplayer) {
 			$('#save').addClass('fa-heart');
 			$('#save').removeClass('fa-heart-o');
 		}
+		if (track.userDug === true) {
+			$('#upvote').addClass('fa-thumbs-up');
+			$('#upvote').removeClass('fa-thumbs-o-up');
+		} else if (track.userBuried === true) {
+			$('#downvote').addClass('fa-thumbs-down');
+			$('#downvote').removeClass('fa-thumbs-o-down');
+		}
 	}
 	
 	function clearTrack() {
@@ -120,9 +127,14 @@ function RoomPage(ytplayer) {
 		clearTrack();
 	}
 	
-	this.popTrackIdFromQueue = function() {
+	this.popTrackDetailsFromQueue = function() {
 		var track$ = $('div#tracks').children('div.track:first').remove();
-		return track$.attr('data-trackid') || null;
+		var track = {
+			_id: track$.attr('data-trackid') || null,
+			userDug: track$.children('.upvote').hasClass('fa-thumbs-up'),
+			userBuried: track$.children('.downvote').hasClass('fa-thumbs-down')
+		}
+		return track;
 	}
 	
 	this.addTrackToQueue = function(track) {
@@ -195,7 +207,10 @@ function ServerConnection(roomId, roomPage) {
 	});
 
 	socket.on('play', function(track) {
-		if (track._id === roomPage.popTrackIdFromQueue()) {
+		var trackDetails = roomPage.popTrackDetailsFromQueue();
+		if (track._id === trackDetails._id) {
+			track.userDug = trackDetails.userDug;
+			track.userBuried = trackDetails.userBuried;
 			roomPage.playTrack(track);
 		} else {
 			refresh();

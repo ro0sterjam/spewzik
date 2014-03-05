@@ -26,7 +26,7 @@ html
         param(name='allowScriptAccess', value='always')
         param(name='allowFullScreen', value='false')
       div#belowPlayer
-        i.vote(value='-1').fa.fa-2x.fa-thumbs-o-down
+        i#downvote.vote(value='-1').fa.fa-2x.fa-thumbs-o-down
         i#skip.fa.fa-2x.fa-step-forward
         i#roomDetails
           var#listenerCount 0
@@ -36,7 +36,7 @@ html
           var#rating.rating 0
           |  digs
         i#save.fa.fa-2x.fa-heart-o
-        i.vote(value='1').fa.fa-2x.fa-thumbs-o-up
+        i#upvote.vote(value='1').fa.fa-2x.fa-thumbs-o-up
         br
         i#time
           var#currentTime 0:00
