@@ -5,7 +5,7 @@ var querystring = require('querystring');
 
 var NEXT_TRACK_DELAY = 5;
 var RATIO_TO_SKIP = 0.6;
-var AUTO_PLAY_RANDOM = false;
+var AUTO_PLAY_RANDOM = true;
 var CLIENT_RANDOM_QUEUE_LIMIT = 2;
 
 exports.startPlayingAllRooms = startPlayingAllRooms;
