@@ -546,8 +546,19 @@ function getRandomWeightedTrack(roomId, callback) {
 			callback(new Error('Room does not exist for id' + roomId));
 		} else {
 			// get a random track based on weight 
+			var now = Date().getTime();
 			var track = room.tracks.reduce(function(currTrack, track, i, tracks) {
 				// calculate weight of current track
+				
+				//TODO: need to remove super ratings from db and remove the following check
+				if (track.duration > MAX_TRACK_LENGTH) {
+					track.weight = 0;
+				} else if (track.rating > 10) {
+					track.rating = 10;
+				} else if (track.rating < -10) {
+					track.rating = -10;
+				}
+				
 				track.weight = Math.exp((track.rating - track.timesSkipped)/((track.playCount + track.timesSkipped) || 1));
 				// if the current track already exists in the playlist, give it a weight of zero
 				for (var i = 0; i < room.playlist.length; i++) {
