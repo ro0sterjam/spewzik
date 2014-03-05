@@ -181,6 +181,10 @@ function ServerConnection(roomId, roomPage) {
 		socket.emit('resync');
 	}
 	
+	this.addRandomTrack = function() {
+		socket.emit('random');
+	}
+	
 	function refresh() {
 		socket.emit('refresh');
 	}
@@ -275,6 +279,11 @@ function onYouTubePlayerReady() {
 		
 		connection.addTrack(track);
 	  $('input#trackExtId').val('');
+	});
+	
+	$(document).on('click', '#randomTrack', function() {
+		console.log('adding random track');
+		connection.addRandomTrack();
 	});
 	
 	$(document).on('click', '#save', function() {

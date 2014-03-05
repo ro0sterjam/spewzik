@@ -5,7 +5,7 @@ var querystring = require('querystring');
 
 var NEXT_TRACK_DELAY = 5;
 var RATIO_TO_SKIP = 0.6;
-var AUTO_PLAY_RANDOM = true;
+var AUTO_PLAY_RANDOM = false;
 
 exports.startPlayingAllRooms = startPlayingAllRooms;
 exports.addTrackToPlaylist = addTrackToPlaylist;
@@ -107,6 +107,7 @@ function Room(roomId) {
 	this.emitToAllInRoom = emitToAllInRoom;
 	this.isPlaying = isPlaying;
 	this.onSkip = onSkip;
+	this.addRandomTrackToPlaylist = addRandomTrackToPlaylist;
 	
 	var nextTrackTimer = null;
 	var trackStartTime = null;
@@ -132,8 +133,6 @@ function Room(roomId) {
 							console.log('Random track playing error ' + err.message);
 						} else if (track === null) {
 							console.log('No tracks to randomly choose from');
-						} else {
-							playTrack(track);
 						}
 					});
 				} else {
@@ -184,8 +183,6 @@ function Room(roomId) {
 							console.log('No tracks to randomly choose from');
 							emitToAllInRoom('stop');
 							app.io.of('/front').emit('newTrack', roomId, null);
-						} else {
-							playTrack(track);
 						}
 					});
 				} else {
@@ -507,6 +504,21 @@ function connectRoom(socket) {
 				client.skip();
 				room.onSkip();
 			}
+		}
+	});
+	
+	socket.on('random', function() {
+		var room = client.getRoom()
+		if (!room) {
+			socket.emit('error', 'User not in room');
+		} else {
+			room.addRandomTrackToPlaylist(function(err, track) {
+				if (err) {
+					socket.emit('error', err.message);
+				} else if (track === null) {
+					socket.emit('error', 'No available tracks to queue');
+				}
+			});
 		}
 	});
 	

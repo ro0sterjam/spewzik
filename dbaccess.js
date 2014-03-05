@@ -532,23 +532,47 @@ function addExternalTrackToPlaylist(host, eid, playlistId, callback) {
 	});
 }
 
+/**
+ * Gets a random weighted track from the list of tracks in the given room.
+ * 
+ * @param roomId ID of the room
+ * @param callback Callback with the params (err, track)
+ */
 function getRandomWeightedTrack(roomId, callback) {
 	getRoom(roomId, function(err, room) {
 		if (err) {
 			callback(err);
 		} else if (room === null) {
 			callback(new Error('Room does not exist for id' + roomId));
-		} else if (room.tracks.length === 0) {
-			callback(null, null);
 		} else {
-			var totalWeight = room.tracks.reduce(function(runningWeight, track, i, tracks) {
-				return runningWeight + Math.exp(track.rating/(track.playCount + track.timesSkipped + 1));
-			}, 0);
-			var track = room.tracks.reduce(function(prevTrack, track, i, tracks) {
-				var prevTrackWeight = Math.exp(prevTrack.rating/(prevTrack.playCount + prevTrack.timesSkipped + 1));
-				var trackWeight = Math.exp(track.rating/(track.playCount + track.timesSkipped + 1));
-				return Math.random() > (prevTrackWeight / (prevTrackWeight + trackWeight))? track : prevTrack;
-			});
+			// get a random track based on weight 
+			var track = room.tracks.reduce(function(currTrack, track, i, tracks) {
+				// calculate weight of current track
+				track.weight = Math.exp((track.rating - track.timesSkipped)/((track.playCount + track.timesSkipped) || 1));
+				// if the current track already exists in the playlist, give it a weight of zero
+				for (var i = 0; i < room.playlist.length; i++) {
+					if (track._id.equals(room.playlist[i]._id)) {
+						track.weight = 0;
+						break;
+					}
+				}
+				
+				if (currTrack === null) {
+					return track.weight === 0? null : track;
+				} else if (track.weight === 0) {
+					return currTrack;
+				} else {
+					if (Math.random() > (currTrack.weight / (currTrack.weight + track.weight))) {
+						// the new track wins
+						track.weight = track.weight + currTrack.weight;
+						return track;
+					} else {
+						// old track wins
+						currTrack.weight = currTrack.weight + track.weight;
+						return currTrack;
+					}
+				}
+			}, null);
 			callback(null, track);
 		}
 	});
