@@ -20,7 +20,12 @@ exports.room = function(req, res) {
 		} else if (room === null) {
 			res.send(404, { error: 'Room not found' });
 		} else {
-			res.render('room', { roomId: room._id, roomName: room.name});
+			var query = req.query;
+			if ('json' in query && query.json === '1') {
+				res.send(200, room);
+			} else {
+				res.render('room', { roomId: room._id, roomName: room.name});
+			}
 		}
 	});
 }
