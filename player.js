@@ -5,6 +5,7 @@ var querystring = require('querystring');
 
 var NEXT_TRACK_DELAY = 5;
 var RATIO_TO_SKIP = 0.6;
+var AUTO_PLAY_RANDOM = true;
 
 exports.startPlayingAllRooms = startPlayingAllRooms;
 exports.addTrackToPlaylist = addTrackToPlaylist;
@@ -124,7 +125,20 @@ function Room(roomId) {
 			if (err) {
 				emitToAllInRoom('error', err.message);
 			} else if (track === null) {
-				console.log('playing in room ' + roomId + ': NOTHING');
+				if (AUTO_PLAY_RANDOM) {
+					console.log('playing random track in ' + roomId);
+					addRandomTrackToPlaylist(function(err, track) {
+						if (err) {
+							console.log('Random track playing error ' + err.message);
+						} else if (track === null) {
+							console.log('No tracks to randomly choose from');
+						} else {
+							playTrack(track);
+						}
+					});
+				} else {
+					console.log('playing in room ' + roomId + ': NOTHING');
+				}
 			} else {
 				playTrack(track);
 			}
@@ -161,9 +175,24 @@ function Room(roomId) {
 			if (err) {
 				emitToAllInRoom('error', err.message);
 			} else if (track === null) {
-				console.log('nothing left to play in room ' + roomId);
-				emitToAllInRoom('stop');
-				app.io.of('/front').emit('newTrack', roomId, null);
+				if (AUTO_PLAY_RANDOM) {
+					console.log('playing random track in ' + roomId);
+					addRandomTrackToPlaylist(function(err, track) {
+						if (err) {
+							console.log('Random track playing error ' + err.message);
+						} else if (track === null) {
+							console.log('No tracks to randomly choose from');
+							emitToAllInRoom('stop');
+							app.io.of('/front').emit('newTrack', roomId, null);
+						} else {
+							playTrack(track);
+						}
+					});
+				} else {
+					console.log('nothing left to play in room ' + roomId);
+					emitToAllInRoom('stop');
+					app.io.of('/front').emit('newTrack', roomId, null);
+				}
 			} else {
 				playTrack(track);
 			}
@@ -210,7 +239,6 @@ function Room(roomId) {
 	}
 	
 	function addTrackToQueue(host, eid, addedBy, callback) {
-		var wasPlaying = isPlaying();
 		console.log('adding track { host: ' + host + ', eid: ' + eid + ' }' + ' to room ' + roomId);
 		dbaccess.addExternalTrackToPlaylist(host, eid, roomId, function(err, track) {
 			if (err) {
@@ -218,7 +246,7 @@ function Room(roomId) {
 			} else {
 				track.addedBy = addedBy;
 				emitToAllInRoom('track', track);
-				if (!wasPlaying) {
+				if (!isPlaying()) {
 					startPlaying();
 				}
 				callback(null, track);
@@ -249,6 +277,39 @@ function Room(roomId) {
 				roomData.skipCount = getSkipCount();
 				roomData.listenerCount = getListeners().length;
 				callback(null, roomData);
+			}
+		});
+	}
+	
+	function getRandomTrack(callback) {
+		dbaccess.getRandomWeightedTrack(roomId, function(err, track) {
+			if (err) {
+				callback(err);
+			} else {
+				callback(null, track);
+			}
+		});
+	}
+	
+	function addRandomTrackToPlaylist(callback) {
+		getRandomTrack(function(err, track) {
+			if (err) {
+				callback(err);
+			} else if (track === null) {
+				callback(null, track);
+			} else {
+				dbaccess.addTrackToPlaylist(roomId, track, function(err, track) {
+					if (err) {
+						callback(err);
+					} else {
+						track.addedBy = 'Random play';
+						emitToAllInRoom('track', track);
+						if (!isPlaying()) {
+							startPlaying();
+						}
+						callback(null, track);
+					}
+				});
 			}
 		});
 	}

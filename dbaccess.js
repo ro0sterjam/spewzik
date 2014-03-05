@@ -532,6 +532,28 @@ function addExternalTrackToPlaylist(host, eid, playlistId, callback) {
 	});
 }
 
+function getRandomWeightedTrack(roomId, callback) {
+	getRoom(roomId, function(err, room) {
+		if (err) {
+			callback(err);
+		} else if (room === null) {
+			callback(new Error('Room does not exist for id' + roomId));
+		} else if (room.tracks.length === 0) {
+			callback(null, null);
+		} else {
+			var totalWeight = room.tracks.reduce(function(runningWeight, track, i, tracks) {
+				return runningWeight + Math.exp(track.rating/(track.playCount + track.timesSkipped + 1));
+			}, 0);
+			var track = room.tracks.reduce(function(prevTrack, track, i, tracks) {
+				var prevTrackWeight = Math.exp(prevTrack.rating/(prevTrack.playCount + prevTrack.timesSkipped + 1));
+				var trackWeight = Math.exp(track.rating/(track.playCount + track.timesSkipped + 1));
+				return Math.random() > (prevTrackWeight / (prevTrackWeight + trackWeight))? track : prevTrack;
+			});
+			callback(null, track);
+		}
+	});
+}
+
 exports.getCurrentTrack = getCurrentTrack;
 exports.playNext = playNext;
 exports.getPlaylist = getPlaylist;
@@ -540,3 +562,5 @@ exports.addToTrackRating = addToTrackRating;
 exports.createRoom = createRoom;
 exports.getRoomsDetails = getRoomsDetails;
 exports.getRoom = getRoom;
+exports.getRandomWeightedTrack = getRandomWeightedTrack;
+exports.addTrackToPlaylist = addTrackToPlaylist;
