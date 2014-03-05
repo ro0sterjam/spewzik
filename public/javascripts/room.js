@@ -262,23 +262,7 @@ function onYouTubePlayerReady() {
 	});
 
 	$(document).on('click', '#addTrack', function() {
-		console.log('adding track');
-		var text = $('input#trackExtId').val();
-		if (text.length > 25) {
-			var track = {
-				url: text,
-				nickname: localStorage.getItem('nickname')
-			}
-		} else {
-			var track = {
-				host: 'youtube',
-				eid: text,
-				nickname: localStorage.getItem('nickname')
-			}
-		}
-		
-		connection.addTrack(track);
-	  $('input#trackExtId').val('');
+		addTrack();
 	});
 	
 	$(document).on('click', '#randomTrack', function() {
@@ -308,6 +292,32 @@ function onYouTubePlayerReady() {
 		localStorage.setItem('nickname', $('input#nickname').val());
 	  $('input#nickname').val('');
 	});
+	
+	$('input#trackExtId').keypress(function(event) {
+		if (event.keyCode === 13) {
+			addTrack();
+		}
+	});
+	
+	function addTrack() {
+		console.log('adding track');
+		var text = $('input#trackExtId').val();
+		if (text.length > 25) {
+			var track = {
+				url: text,
+				nickname: localStorage.getItem('nickname')
+			}
+		} else {
+			var track = {
+				host: 'youtube',
+				eid: text,
+				nickname: localStorage.getItem('nickname')
+			}
+		}
+		
+		connection.addTrack(track);
+	  $('input#trackExtId').val('');
+	}
 	
 	ytplayer.addEventListener('onStateChange', 'onYouTubeStateChange');
 	
