@@ -1,6 +1,5 @@
 var url = require('url');
 var querystring = require('querystring');
-var xml2js = require('xml2js');
 var youtubedl = require('youtube-dl');
 var request = require('request');
 var monk = require('monk');
@@ -84,30 +83,29 @@ function addTrackToTracks(host, eid, callback) {
 		if (eid.trim().length === 0) {
 			callback(new Error('Eid field blank'));
 		} else {
-			request('https://gdata.youtube.com/feeds/api/videos/' + eid + '?v=2', function(err, res, body) {
+			request('https://gdata.youtube.com/feeds/api/videos/' + eid + '?v=2&alt=json', function(err, res, body) {
 				if (err) {
 					callback(err);
 				} else if (res.statusCode !== 200) {
 					callback(new Error('Video not found'));
 				} else {
-					xml2js.parseString(body, function (err, result) {
-						if (err) {
-							callback(err);
-						} else if (parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds) > MAX_TRACK_LENGTH) {
-							callback(new Error('Max video length allowed: ' + MAX_TRACK_LENGTH + ' seconds'));
-						} else {
-							var track = {
-								name: result.entry.title[0],
-								duration: parseInt(result.entry['media:group'][0]['yt:duration'][0]['$'].seconds),
-								rating: 0,
-								playCount: 0,
-								added: Date(),
-								host: host,
-								eid: eid
-							}
-							db.get('tracks').insert(track, callback);
+					body = JSON.parse(body);
+					if (parseInt(body.entry['media$group']['yt$duration'].seconds) > MAX_TRACK_LENGTH) {
+						callback(new Error('Max video length allowed: ' + MAX_TRACK_LENGTH + ' seconds'));
+					} else if (body.entry['yt$accessControl'].filter(function(control) { return control.action === 'embed'})[0].permission === 'denied') {
+						callback(new Error('User disabled embeding for this video'));
+					} else {	
+						var track = {
+							name: body.entry.title['$t'],
+							duration: parseInt(body.entry['media$group']['yt$duration'].seconds),
+							rating: 0,
+							playCount: 0,
+							added: Date(),
+							host: host,
+							eid: eid
 						}
-					});
+						db.get('tracks').insert(track, callback);
+					}
 				}
 			});
 		}
