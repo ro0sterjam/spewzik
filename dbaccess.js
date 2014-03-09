@@ -89,15 +89,14 @@ function addTrackToTracks(host, eid, callback) {
 				} else if (res.statusCode !== 200) {
 					callback(new Error('Video not found'));
 				} else {
-					body = JSON.parse(body);
-					if (parseInt(body.entry['media$group']['yt$duration'].seconds) > MAX_TRACK_LENGTH) {
-						callback(new Error('Max video length allowed: ' + MAX_TRACK_LENGTH + ' seconds'));
-					} else if (body.entry['yt$accessControl'].filter(function(control) { return control.action === 'embed'})[0].permission === 'denied') {
+					entry = JSON.parse(body).entry;
+					if (entry['yt$accessControl'].filter(function(control) { return control.action === 'embed'})[0].permission === 'denied') {
 						callback(new Error('User disabled embeding for this video'));
 					} else {	
 						var track = {
-							name: body.entry.title['$t'],
-							duration: parseInt(body.entry['media$group']['yt$duration'].seconds),
+							name: entry.title['$t'],
+							duration: parseInt(entry['media$group']['yt$duration'].seconds),
+							category: entry.category.filter(function(category) { return !!category.label }).map(function(category) { return { term: category.term, label: category.label } })[0],
 							rating: 0,
 							playCount: 0,
 							added: Date(),
