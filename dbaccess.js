@@ -184,7 +184,7 @@ function playNext(roomId, skipped, callback) {
 				var oldTrack = room.playlist[0];
 				var nextTrack = room.playlist[1] || null;
 				// Add the popped playlist track to top of history
-				db.get('rooms').update({ _id: roomId }, { $set: { 'history.-1': oldTrack } }, function(err, count) {
+				db.get('rooms').update({ _id: roomId }, { $push: { history: { $each: [oldTrack], $slice: -20 } } }, function(err, count) {
 					if (err) {
 						callback(err);
 					} else if (count === 0) {
